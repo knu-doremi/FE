@@ -3,6 +3,7 @@ import ProfileInfo from './components/ProfileInfo'
 import ProfileStats from './components/ProfileStats'
 import ProfileTabs from './components/ProfileTabs'
 import PostGrid from './components/PostGrid'
+import BottomNavigation from './components/BottomNavigation'
 
 function Profile() {
   // TODO: 실제 사용자 데이터로 교체
@@ -20,7 +21,7 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-16">
       <ProfileHeader />
       <div className="mx-auto max-w-2xl px-4 py-4">
         <ProfileInfo
@@ -39,6 +40,7 @@ function Profile() {
           savedContent={<PostGrid posts={[]} />}
         />
       </div>
+      <BottomNavigation />
     </div>
   )
 }
