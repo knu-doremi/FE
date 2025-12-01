@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { Heart, MessageCircle, Bookmark, User } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface PostCardProps {
   post: {
@@ -22,10 +21,6 @@ interface PostCardProps {
 function PostCard({ post }: PostCardProps) {
   const navigate = useNavigate()
 
-  const handlePostClick = () => {
-    navigate(`/posts/${post.id}`)
-  }
-
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     // TODO: 좋아요 토글 로직
@@ -38,6 +33,11 @@ function PostCard({ post }: PostCardProps) {
     console.log('북마크 클릭', post.id)
   }
 
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/posts/${post.id}`)
+  }
+
   // 내용이 길면 일부만 표시
   const truncatedContent =
     post.content.length > 100
@@ -45,10 +45,7 @@ function PostCard({ post }: PostCardProps) {
       : post.content
 
   return (
-    <div
-      onClick={handlePostClick}
-      className="cursor-pointer rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
-    >
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
       {/* 작성자 정보 */}
       <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 lg:px-6 lg:py-4">
         <div
@@ -114,7 +111,7 @@ function PostCard({ post }: PostCardProps) {
           <div className="flex items-center gap-4">
             <button
               onClick={handleLikeClick}
-              className="flex cursor-pointer items-center gap-1 rounded-md p-1 transition-colors hover:bg-gray-100"
+              className="flex cursor-pointer items-center gap-1 rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10"
             >
               <Heart
                 size={20}
@@ -128,22 +125,26 @@ function PostCard({ post }: PostCardProps) {
               </span>
             </button>
 
-            <div className="flex items-center gap-1">
+            <button
+              onClick={handleCommentClick}
+              className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-[#B9BDDE]/20 hover:text-[#7C7FA8]"
+            >
               <MessageCircle
                 size={20}
+                className="transition-colors"
                 style={{
                   color: '#9CA3AF',
                 }}
               />
-              <span className="text-sm text-gray-600 lg:text-base">
+              <span className="text-sm font-medium text-gray-600 transition-colors lg:text-base">
                 {post.comments}
               </span>
-            </div>
+            </button>
           </div>
 
           <button
             onClick={handleBookmarkClick}
-            className="cursor-pointer rounded-md p-1 transition-colors hover:bg-gray-100"
+            className="cursor-pointer rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10"
           >
             <Bookmark
               size={20}
