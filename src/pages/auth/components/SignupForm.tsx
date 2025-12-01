@@ -240,7 +240,6 @@ function SignupForm() {
           <SelectContent>
             <SelectItem value="male">남성</SelectItem>
             <SelectItem value="female">여성</SelectItem>
-            <SelectItem value="other">기타</SelectItem>
           </SelectContent>
         </Select>
         <FormErrorMessage message={step2Errors.gender} />

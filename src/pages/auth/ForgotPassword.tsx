@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import logoImage from '@/assets/images/doremi-logo.png'
 import ForgotPasswordForm from './components/ForgotPasswordForm'
 
 function ForgotPassword() {
+  const [isSuccess, setIsSuccess] = useState(false)
+
   return (
     <div
       className="flex min-h-screen items-center justify-center px-4 py-8"
@@ -31,17 +34,29 @@ function ForgotPassword() {
             </div>
           </div>
 
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900">
-              비밀번호 찾기
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              회원 정보를 입력해주세요
-            </p>
-          </div>
+          {!isSuccess && (
+            <div className="text-center">
+              <h2
+                className="text-xl font-semibold"
+                style={{
+                  color: '#7C7FA8',
+                }}
+              >
+                비밀번호 찾기
+              </h2>
+              <p
+                className="mt-2 text-sm"
+                style={{
+                  color: '#6B7280',
+                }}
+              >
+                회원 정보를 입력해주세요
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          <ForgotPasswordForm />
+          <ForgotPasswordForm onSuccessChange={setIsSuccess} />
         </CardContent>
       </Card>
     </div>

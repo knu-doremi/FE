@@ -16,7 +16,11 @@ import {
   type ForgotPasswordFormErrors,
 } from '../utils/validation'
 
-function ForgotPasswordForm() {
+interface ForgotPasswordFormProps {
+  onSuccessChange?: (isSuccess: boolean) => void
+}
+
+function ForgotPasswordForm({ onSuccessChange }: ForgotPasswordFormProps) {
   const [formData, setFormData] = useState({
     userId: '',
     name: '',
@@ -25,6 +29,8 @@ function ForgotPasswordForm() {
   })
   const [errors, setErrors] = useState<ForgotPasswordFormErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [foundPassword, setFoundPassword] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +39,12 @@ function ForgotPasswordForm() {
 
     if (Object.keys(validationErrors).length === 0) {
       // TODO: API 연동
-      console.log('ForgotPassword:', formData)
+      // 임시로 비밀번호를 반환하는 것으로 시뮬레이션
+      // 실제로는 API에서 받아온 비밀번호를 표시
+      const mockPassword = '******' // 실제로는 API 응답에서 받아옴
+      setFoundPassword(mockPassword)
+      setIsSuccess(true)
+      onSuccessChange?.(true)
     }
   }
 
@@ -79,6 +90,104 @@ function ForgotPasswordForm() {
     }))
   }
 
+  // 성공 화면
+  if (isSuccess) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="flex justify-center">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: 'rgba(185, 189, 222, 0.2)',
+            }}
+          >
+            <svg
+              className="h-8 w-8"
+              style={{
+                color: '#B9BDDE',
+              }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3
+            className="text-xl font-semibold"
+            style={{
+              color: '#7C7FA8',
+            }}
+          >
+            비밀번호를 찾았습니다
+          </h3>
+          <p
+            className="text-sm"
+            style={{
+              color: '#6B7280',
+            }}
+          >
+            입력하신 정보로 비밀번호를 찾았습니다.
+          </p>
+        </div>
+
+        <div
+          className="rounded-lg border-2 p-4"
+          style={{
+            borderColor: '#B9BDDE',
+            backgroundColor: 'rgba(185, 189, 222, 0.1)',
+          }}
+        >
+          <p
+            className="mb-2 text-sm font-medium"
+            style={{
+              color: '#6B7280',
+            }}
+          >
+            비밀번호
+          </p>
+          <p
+            className="text-2xl font-bold tracking-wider"
+            style={{
+              color: '#7C7FA8',
+            }}
+          >
+            {foundPassword}
+          </p>
+        </div>
+
+        <Link to="/login" className="block">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            style={{
+              borderColor: '#B9BDDE',
+              color: '#7C7FA8',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(185, 189, 222, 0.1)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+          >
+            로그인하러 가기
+          </Button>
+        </Link>
+      </div>
+    )
+  }
+
+  // 입력 폼
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -132,7 +241,6 @@ function ForgotPasswordForm() {
           <SelectContent>
             <SelectItem value="male">남성</SelectItem>
             <SelectItem value="female">여성</SelectItem>
-            <SelectItem value="other">기타</SelectItem>
           </SelectContent>
         </Select>
         <FormErrorMessage message={errors.gender} />
