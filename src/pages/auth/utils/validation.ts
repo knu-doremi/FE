@@ -129,3 +129,49 @@ export function validateSignupForm(data: {
 
   return { ...step1Errors, ...step2Errors }
 }
+
+// 비밀번호 찾기 폼 유효성 검사
+export interface ForgotPasswordFormErrors {
+  userId?: string
+  name?: string
+  gender?: string
+  birthDate?: string
+}
+
+export function validateForgotPasswordForm(data: {
+  userId: string
+  name: string
+  gender: string
+  birthDate: string
+}): ForgotPasswordFormErrors {
+  const errors: ForgotPasswordFormErrors = {}
+
+  if (!data.userId.trim()) {
+    errors.userId = '아이디를 입력해주세요.'
+  } else if (data.userId.length < 3) {
+    errors.userId = '아이디는 최소 3자 이상이어야 합니다.'
+  }
+
+  if (!data.name.trim()) {
+    errors.name = '이름을 입력해주세요.'
+  } else if (data.name.length < 2) {
+    errors.name = '이름은 최소 2자 이상이어야 합니다.'
+  }
+
+  if (!data.gender) {
+    errors.gender = '성별을 선택해주세요.'
+  }
+
+  if (!data.birthDate) {
+    errors.birthDate = '생년월일을 입력해주세요.'
+  } else {
+    const birthDate = new Date(data.birthDate)
+    const today = new Date()
+
+    if (birthDate > today) {
+      errors.birthDate = '생년월일은 오늘 날짜보다 이전이어야 합니다.'
+    }
+  }
+
+  return errors
+}
