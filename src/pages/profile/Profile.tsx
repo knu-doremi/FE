@@ -1,5 +1,6 @@
 import ProfileHeader from './components/ProfileHeader'
 import ProfileInfo from './components/ProfileInfo'
+import ProfileStats from './components/ProfileStats'
 
 function Profile() {
   // TODO: 실제 사용자 데이터로 교체
@@ -7,6 +8,12 @@ function Profile() {
     name: '여웅니',
     userId: 'yeongni_official',
     gender: 'female' as const,
+    stats: {
+      totalLikes: 4500,
+      followers: 4500,
+      following: 88,
+      posts: 123,
+    },
   }
 
   return (
@@ -17,6 +24,12 @@ function Profile() {
           name={userData.name}
           userId={userData.userId}
           gender={userData.gender}
+        />
+        <ProfileStats
+          totalLikes={userData.stats.totalLikes}
+          followers={userData.stats.followers}
+          following={userData.stats.following}
+          posts={userData.stats.posts}
         />
       </div>
     </div>
