@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useNavigate } from 'react-router-dom'
 
+import logoImage from '@/assets/images/doremi-logo.png'
+
 interface AuthLayoutProps {
   loginForm: ReactNode
   signupForm: ReactNode
@@ -25,14 +27,20 @@ function AuthLayout({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4">
-          {/* 로고 영역 - 추후 doremi 로고로 교체 */}
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-4 sm:space-y-6">
+          {/* 로고 영역 */}
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-purple-500" />
-              <span className="text-2xl font-bold text-gray-900">doremi</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img
+                src={logoImage}
+                alt="doremi"
+                className="h-8 w-8 object-contain sm:h-10 sm:w-10"
+              />
+              <span className="text-xl font-bold text-gray-900 sm:text-2xl">
+                doremi
+              </span>
             </div>
           </div>
 
