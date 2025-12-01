@@ -6,6 +6,7 @@ import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Profile from '@/pages/profile/Profile'
 import EditProfile from '@/pages/profile/EditProfile'
 import CreatePost from '@/pages/posts/CreatePost'
+import PostDetail from '@/pages/posts/PostDetail'
 import NotFound from '@/pages/NotFound'
 
 export const router = createBrowserRouter([
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
   {
     path: '/posts/new',
     element: <CreatePost />,
+  },
+  {
+    path: '/posts/:postId',
+    element: <PostDetail />,
   },
   {
     path: '*',

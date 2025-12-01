@@ -41,9 +41,10 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
         }
 
         return (
-          <div
+          <button
             key={item.id}
-            className="flex aspect-square items-center justify-center rounded-lg bg-gray-200"
+            onClick={() => navigate(`/posts/${item.id}`)}
+            className="flex aspect-square cursor-pointer items-center justify-center rounded-lg bg-gray-200 transition-colors hover:bg-gray-300"
           >
             <span
               className="text-xs"
@@ -53,7 +54,7 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
             >
               Post {index}
             </span>
-          </div>
+          </button>
         )
       })}
     </div>
