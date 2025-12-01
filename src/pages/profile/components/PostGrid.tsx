@@ -28,7 +28,7 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
             <button
               key="add-post"
               onClick={handleAddPost}
-              className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-[#B9BDDE] hover:bg-gray-100"
+              className="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-[#B9BDDE] hover:bg-gray-100"
             >
               <Plus
                 size={32}

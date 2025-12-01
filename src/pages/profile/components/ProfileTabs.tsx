@@ -16,7 +16,7 @@ function ProfileTabs({ postsContent, savedContent }: ProfileTabsProps) {
         <div className="relative flex">
           <button
             onClick={() => setActiveTab('posts')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-t-lg px-4 py-3 transition-all ${
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-t-lg px-4 py-3 transition-all ${
               activeTab === 'posts'
                 ? 'shadow-sm'
                 : 'bg-transparent text-gray-500'
@@ -41,7 +41,7 @@ function ProfileTabs({ postsContent, savedContent }: ProfileTabsProps) {
 
           <button
             onClick={() => setActiveTab('saved')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-t-lg px-4 py-3 transition-all ${
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-t-lg px-4 py-3 transition-all ${
               activeTab === 'saved'
                 ? 'shadow-sm'
                 : 'bg-transparent text-gray-500'

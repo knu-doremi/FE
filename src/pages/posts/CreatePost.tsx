@@ -286,7 +286,7 @@ function CreatePost() {
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                    className="absolute right-2 top-2 cursor-pointer rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
                   >
                     <X size={16} />
                   </button>
@@ -388,7 +388,7 @@ function CreatePost() {
                     <button
                       type="button"
                       onClick={() => removeHashtag(tag)}
-                      className="hover:text-gray-200"
+                      className="cursor-pointer hover:text-gray-200"
                     >
                       <X size={14} />
                     </button>

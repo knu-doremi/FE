@@ -27,7 +27,7 @@ function ProfileHeader() {
 
       <button
         onClick={handleLogout}
-        className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
+        className="cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
       >
         로그아웃
       </button>
