@@ -44,7 +44,7 @@ function PostsFeedHeader() {
             />
             <Input
               type="text"
-              placeholder="# 해시태그로 게시물 검색"
+              placeholder="해시태그로 게시물 검색"
               className="w-full pl-10 pr-4"
             />
           </div>

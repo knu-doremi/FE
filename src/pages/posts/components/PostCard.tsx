@@ -112,11 +112,9 @@ function PostCard({ post }: PostCardProps) {
         {/* 좋아요, 댓글, 북마크 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={handleLikeClick}
-              className="cursor-pointer"
+              className="flex cursor-pointer items-center gap-1 rounded-md p-1 transition-colors hover:bg-gray-100"
             >
               <Heart
                 size={20}
@@ -125,10 +123,10 @@ function PostCard({ post }: PostCardProps) {
                 }}
                 fill={post.isLiked ? '#EF4444' : 'none'}
               />
-              <span className="ml-1 text-sm text-gray-600 lg:text-base">
+              <span className="text-sm text-gray-600 lg:text-base">
                 {post.likes}
               </span>
-            </Button>
+            </button>
 
             <div className="flex items-center gap-1">
               <MessageCircle
@@ -137,17 +135,15 @@ function PostCard({ post }: PostCardProps) {
                   color: '#9CA3AF',
                 }}
               />
-              <span className="ml-1 text-sm text-gray-600 lg:text-base">
+              <span className="text-sm text-gray-600 lg:text-base">
                 {post.comments}
               </span>
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={handleBookmarkClick}
-            className="cursor-pointer"
+            className="cursor-pointer rounded-md p-1 transition-colors hover:bg-gray-100"
           >
             <Bookmark
               size={20}
@@ -156,7 +152,7 @@ function PostCard({ post }: PostCardProps) {
               }}
               fill={post.isBookmarked ? '#B9BDDE' : 'none'}
             />
-          </Button>
+          </button>
         </div>
       </div>
     </div>
