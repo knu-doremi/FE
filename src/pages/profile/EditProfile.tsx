@@ -4,38 +4,52 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import FormErrorMessage from '../auth/components/FormErrorMessage'
 import {
-  validateSignupStep2,
-  type SignupStep2Errors,
+  validateLoginForm,
+  type LoginFormErrors,
 } from '../auth/utils/validation'
 import logoImage from '@/assets/images/doremi-logo.png'
+
+interface EditProfileErrors {
+  name?: string
+  password?: string
+}
+
+function validateEditProfileForm(data: {
+  name: string
+  password: string
+}): EditProfileErrors {
+  const errors: EditProfileErrors = {}
+
+  if (!data.name.trim()) {
+    errors.name = '이름을 입력해주세요.'
+  } else if (data.name.length < 2) {
+    errors.name = '이름은 최소 2자 이상이어야 합니다.'
+  }
+
+  if (!data.password) {
+    errors.password = '비밀번호를 입력해주세요.'
+  } else if (data.password.length < 6) {
+    errors.password = '비밀번호는 최소 6자 이상이어야 합니다.'
+  }
+
+  return errors
+}
 
 function EditProfile() {
   const navigate = useNavigate()
   // TODO: 실제 사용자 데이터로 교체
   const [formData, setFormData] = useState({
     name: '사용자',
-    gender: 'female',
-    birthDate: '2000-01-01',
+    password: '',
   })
-  const [errors, setErrors] = useState<SignupStep2Errors>({})
+  const [errors, setErrors] = useState<EditProfileErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const validationErrors = validateSignupStep2({
-      name: formData.name,
-      gender: formData.gender,
-      birthDate: formData.birthDate,
-    })
+    const validationErrors = validateEditProfileForm(formData)
     setErrors(validationErrors)
 
     if (Object.keys(validationErrors).length === 0) {
@@ -51,47 +65,24 @@ function EditProfile() {
 
     // 실시간 유효성 검사
     if (touched[name]) {
-      const validationErrors = validateSignupStep2({
-        name: formData.name,
-        gender: formData.gender,
-        birthDate: formData.birthDate,
+      const validationErrors = validateEditProfileForm({
+        ...formData,
         [name]: value,
       })
       setErrors(prev => ({
         ...prev,
-        [name]: validationErrors[name as keyof SignupStep2Errors],
+        [name]: validationErrors[name as keyof EditProfileErrors],
       }))
     }
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-    setTouched(prev => ({ ...prev, [name]: true }))
-
-    // 실시간 유효성 검사
-    const validationErrors = validateSignupStep2({
-      name: formData.name,
-      gender: formData.gender,
-      birthDate: formData.birthDate,
-      [name]: value,
-    })
-    setErrors(prev => ({
-      ...prev,
-      [name]: validationErrors[name as keyof SignupStep2Errors],
-    }))
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target
     setTouched(prev => ({ ...prev, [name]: true }))
-    const validationErrors = validateSignupStep2({
-      name: formData.name,
-      gender: formData.gender,
-      birthDate: formData.birthDate,
-    })
+    const validationErrors = validateEditProfileForm(formData)
     setErrors(prev => ({
       ...prev,
-      [name]: validationErrors[name as keyof SignupStep2Errors],
+      [name]: validationErrors[name as keyof EditProfileErrors],
     }))
   }
 
@@ -156,44 +147,23 @@ function EditProfile() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-gender">성별 (Gender)</Label>
-              <Select
-                value={formData.gender}
-                onValueChange={value => handleSelectChange('gender', value)}
-              >
-                <SelectTrigger
-                  id="edit-gender"
-                  className={
-                    errors.gender ? 'border-red-500 focus:ring-red-500' : ''
-                  }
-                >
-                  <SelectValue placeholder="성별 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">남성</SelectItem>
-                  <SelectItem value="female">여성</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormErrorMessage message={errors.gender} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-birthDate">생년월일 (Birth Date)</Label>
+              <Label htmlFor="edit-password">비밀번호 (Password)</Label>
               <Input
-                id="edit-birthDate"
-                name="birthDate"
-                type="date"
-                value={formData.birthDate}
+                id="edit-password"
+                name="password"
+                type="password"
+                placeholder="새 비밀번호 입력"
+                value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
-                  errors.birthDate
+                  errors.password
                     ? 'border-red-500 focus-visible:ring-red-500'
                     : ''
                 }
                 required
               />
-              <FormErrorMessage message={errors.birthDate} />
+              <FormErrorMessage message={errors.password} />
             </div>
 
             <div className="flex gap-3">

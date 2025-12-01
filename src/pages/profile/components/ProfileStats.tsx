@@ -2,15 +2,9 @@ interface ProfileStatsProps {
   totalLikes: number
   followers: number
   following: number
-  posts: number
 }
 
-function ProfileStats({
-  totalLikes,
-  followers,
-  following,
-  posts,
-}: ProfileStatsProps) {
+function ProfileStats({ totalLikes, followers, following }: ProfileStatsProps) {
   // 숫자를 포맷팅하는 함수 (예: 4500 -> 4.5K)
   const formatNumber = (num: number): string => {
     if (num >= 1000) {
@@ -32,20 +26,6 @@ function ProfileStats({
           }}
         >
           좋아요
-        </span>
-      </div>
-
-      <div className="flex flex-col items-center gap-1">
-        <span className="text-lg font-semibold text-gray-900 lg:text-xl">
-          {formatNumber(posts)}
-        </span>
-        <span
-          className="text-xs lg:text-sm"
-          style={{
-            color: '#6B7280',
-          }}
-        >
-          게시물
         </span>
       </div>
 

@@ -25,17 +25,11 @@ function Profile() {
     <div className="min-h-screen bg-gray-50 pb-16 pt-16 lg:pb-20 lg:pt-20">
       <ProfileHeader />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
-        <ProfileInfo
-          name={userData.name}
-          userId={userData.userId}
-          gender={userData.gender}
-          birthDate={userData.birthDate}
-        />
+        <ProfileInfo name={userData.name} userId={userData.userId} />
         <ProfileStats
           totalLikes={userData.stats.totalLikes}
           followers={userData.stats.followers}
           following={userData.stats.following}
-          posts={userData.stats.posts}
         />
         <ProfileTabs
           postsContent={<PostGrid posts={userData.posts} />}
