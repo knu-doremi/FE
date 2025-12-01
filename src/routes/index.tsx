@@ -7,6 +7,7 @@ import Profile from '@/pages/profile/Profile'
 import EditProfile from '@/pages/profile/EditProfile'
 import CreatePost from '@/pages/posts/CreatePost'
 import PostDetail from '@/pages/posts/PostDetail'
+import PostsFeed from '@/pages/posts/PostsFeed'
 import NotFound from '@/pages/NotFound'
 
 export const router = createBrowserRouter([
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
   {
     path: '/profile/edit',
     element: <EditProfile />,
+  },
+  {
+    path: '/posts',
+    element: <PostsFeed />,
   },
   {
     path: '/posts/new',
