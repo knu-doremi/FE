@@ -27,18 +27,18 @@ function AuthLayout({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-4 sm:space-y-6">
-          {/* 로고 영역 */}
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 lg:px-8 lg:py-12">
+      <Card className="w-full max-w-sm shadow-lg lg:max-w-md">
+        <CardHeader className="space-y-4 lg:space-y-6">
+          {/* 로고 영역 - 모바일 기본, 데스크톱에서 확대 */}
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 lg:gap-3">
               <img
                 src={logoImage}
                 alt="doremi"
-                className="h-8 w-8 object-contain sm:h-10 sm:w-10"
+                className="h-8 w-8 object-contain lg:h-12 lg:w-12"
               />
-              <span className="text-xl font-bold text-gray-900 sm:text-2xl">
+              <span className="text-lg font-bold text-gray-900 lg:text-3xl">
                 doremi
               </span>
             </div>

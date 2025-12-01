@@ -1,27 +1,29 @@
 import { Link } from 'react-router-dom'
+import logoImage from '@/assets/images/doremi-logo.png'
 
 function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="container mx-auto px-4 text-center">
-        <h1 className="mb-4 text-2xl font-bold text-gray-800 sm:text-3xl md:text-4xl lg:text-5xl">
-          React + Vite + TypeScript + Tailwind
-        </h1>
-        <p className="mb-8 text-sm text-gray-600 sm:text-base md:text-lg">
-          프로젝트가 성공적으로 초기화되었습니다! 🎉
-        </p>
-        <div className="flex gap-4 justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 lg:px-8 lg:py-12">
+      <div className="w-full max-w-sm px-4 text-center lg:max-w-2xl">
+        {/* 로고 및 제목 - 모바일 기본, 데스크톱에서 확대 */}
+        <div className="mb-6 flex items-center justify-center gap-2 lg:mb-12 lg:gap-4">
+          <img
+            src={logoImage}
+            alt="doremi"
+            className="h-10 w-10 object-contain lg:h-20 lg:w-20"
+          />
+          <h1 className="text-2xl font-bold text-gray-900 lg:text-6xl">
+            doremi
+          </h1>
+        </div>
+
+        {/* 시작하기 버튼 - 모바일 기본, 데스크톱에서 확대 */}
+        <div className="flex justify-center">
           <Link
             to="/login"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
+            className="w-full rounded-lg bg-doremi-purple px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-doremi-purple-dark lg:w-auto lg:px-12 lg:py-4 lg:text-xl"
           >
-            로그인
-          </Link>
-          <Link
-            to="/signup"
-            className="rounded-lg bg-pink-600 px-6 py-3 text-white transition-colors hover:bg-pink-700"
-          >
-            회원가입
+            시작하기
           </Link>
         </div>
       </div>
