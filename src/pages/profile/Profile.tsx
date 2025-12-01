@@ -11,6 +11,7 @@ function Profile() {
     name: '사용자',
     userId: 'user_officials',
     gender: 'female' as const,
+    birthDate: '2000-01-01',
     stats: {
       totalLikes: 4500,
       followers: 4500,
@@ -28,6 +29,7 @@ function Profile() {
           name={userData.name}
           userId={userData.userId}
           gender={userData.gender}
+          birthDate={userData.birthDate}
         />
         <ProfileStats
           totalLikes={userData.stats.totalLikes}

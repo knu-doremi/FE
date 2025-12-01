@@ -4,6 +4,7 @@ import Login from '@/pages/auth/Login'
 import Signup from '@/pages/auth/Signup'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Profile from '@/pages/profile/Profile'
+import EditProfile from '@/pages/profile/EditProfile'
 import NotFound from '@/pages/NotFound'
 
 export const router = createBrowserRouter([
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
   {
     path: '/profile',
     element: <Profile />,
+  },
+  {
+    path: '/profile/edit',
+    element: <EditProfile />,
   },
   {
     path: '*',
