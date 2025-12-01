@@ -4,9 +4,14 @@ import { useNavigate } from 'react-router-dom'
 interface PostGridProps {
   posts?: Array<{ id: number; image?: string }>
   onAddPost?: () => void
+  showAddButton?: boolean
 }
 
-function PostGrid({ posts = [], onAddPost }: PostGridProps) {
+function PostGrid({
+  posts = [],
+  onAddPost,
+  showAddButton = true,
+}: PostGridProps) {
   const navigate = useNavigate()
 
   const handleAddPost = () => {
@@ -14,11 +19,15 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
     navigate('/posts/new')
   }
 
-  // 첫 번째 칸은 + 버튼, 나머지는 게시물 플레이스홀더
-  const displayItems = [
-    { type: 'add' as const },
-    ...posts.slice(0, 8).map(post => ({ type: 'post' as const, id: post.id })),
-  ]
+  // showAddButton이 true일 때만 첫 번째 칸에 + 버튼 추가
+  const displayItems = showAddButton
+    ? [
+        { type: 'add' as const },
+        ...posts
+          .slice(0, 8)
+          .map(post => ({ type: 'post' as const, id: post.id })),
+      ]
+    : posts.slice(0, 9).map(post => ({ type: 'post' as const, id: post.id }))
 
   return (
     <div className="grid grid-cols-3 gap-1 py-4 lg:gap-2 lg:py-6">
@@ -40,6 +49,9 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
           )
         }
 
+        // showAddButton이 true일 때는 index에서 1을 빼서 게시물 번호 계산
+        const postIndex = showAddButton ? index - 1 : index
+
         return (
           <button
             key={item.id}
@@ -52,7 +64,7 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
                 color: '#9CA3AF',
               }}
             >
-              Post {index}
+              Post {postIndex + 1}
             </span>
           </button>
         )

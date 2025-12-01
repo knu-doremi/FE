@@ -36,7 +36,7 @@ function ProfileTabs({ postsContent, savedContent }: ProfileTabsProps) {
                 color: activeTab === 'posts' ? '#FFFFFF' : '#9CA3AF',
               }}
             />
-            <span className="font-medium">게시물</span>
+            <span className="font-medium">내 게시물</span>
           </button>
 
           <button
@@ -61,7 +61,7 @@ function ProfileTabs({ postsContent, savedContent }: ProfileTabsProps) {
                 color: activeTab === 'saved' ? '#FFFFFF' : '#9CA3AF',
               }}
             />
-            <span className="font-medium">저장됨</span>
+            <span className="font-medium">북마크</span>
           </button>
         </div>
       </div>

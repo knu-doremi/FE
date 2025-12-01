@@ -19,6 +19,7 @@ function Profile() {
       posts: 123,
     },
     posts: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    bookmarkedPosts: [{ id: 4 }, { id: 5 }, { id: 6 }, { id: 7 }],
   }
 
   return (
@@ -32,8 +33,12 @@ function Profile() {
           following={userData.stats.following}
         />
         <ProfileTabs
-          postsContent={<PostGrid posts={userData.posts} />}
-          savedContent={<PostGrid posts={[]} />}
+          postsContent={
+            <PostGrid posts={userData.posts} showAddButton={true} />
+          }
+          savedContent={
+            <PostGrid posts={userData.bookmarkedPosts} showAddButton={false} />
+          }
         />
       </div>
       <BottomNavigation />
