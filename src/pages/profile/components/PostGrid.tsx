@@ -19,7 +19,7 @@ function PostGrid({ posts = [], onAddPost }: PostGridProps) {
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-1 py-4">
+    <div className="grid grid-cols-3 gap-1 py-4 lg:gap-2 lg:py-6">
       {displayItems.map((item, index) => {
         if (item.type === 'add') {
           return (

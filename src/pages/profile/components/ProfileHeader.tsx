@@ -8,11 +8,15 @@ function ProfileHeader() {
   }
 
   return (
-    <header className="flex items-center justify-between px-4 py-3">
-      <Link to="/" className="flex items-center gap-2">
-        <img src={logoImage} alt="doremi" className="h-8 w-8 object-contain" />
+    <header className="flex items-center justify-between px-4 py-3 lg:px-6 lg:py-4">
+      <Link to="/" className="flex items-center gap-2 lg:gap-3">
+        <img
+          src={logoImage}
+          alt="doremi"
+          className="h-8 w-8 object-contain lg:h-10 lg:w-10"
+        />
         <span
-          className="text-lg font-bold"
+          className="text-lg font-bold lg:text-xl"
           style={{
             color: '#7C7FA8',
           }}
@@ -23,7 +27,7 @@ function ProfileHeader() {
 
       <button
         onClick={handleLogout}
-        className="text-sm font-medium text-gray-600 hover:text-gray-900"
+        className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
       >
         로그아웃
       </button>

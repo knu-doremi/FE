@@ -20,13 +20,13 @@ function ProfileStats({
   }
 
   return (
-    <div className="flex items-center justify-around border-y border-gray-200 py-4">
+    <div className="flex items-center justify-around border-y border-gray-200 py-4 lg:py-6">
       <div className="flex flex-col items-center gap-1">
-        <span className="text-lg font-semibold text-gray-900">
+        <span className="text-lg font-semibold text-gray-900 lg:text-xl">
           {formatNumber(totalLikes)}
         </span>
         <span
-          className="text-xs"
+          className="text-xs lg:text-sm"
           style={{
             color: '#6B7280',
           }}
@@ -36,11 +36,11 @@ function ProfileStats({
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <span className="text-lg font-semibold text-gray-900">
+        <span className="text-lg font-semibold text-gray-900 lg:text-xl">
           {formatNumber(posts)}
         </span>
         <span
-          className="text-xs"
+          className="text-xs lg:text-sm"
           style={{
             color: '#6B7280',
           }}
@@ -50,11 +50,11 @@ function ProfileStats({
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <span className="text-lg font-semibold text-gray-900">
+        <span className="text-lg font-semibold text-gray-900 lg:text-xl">
           {formatNumber(followers)}
         </span>
         <span
-          className="text-xs"
+          className="text-xs lg:text-sm"
           style={{
             color: '#6B7280',
           }}
@@ -64,11 +64,11 @@ function ProfileStats({
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <span className="text-lg font-semibold text-gray-900">
+        <span className="text-lg font-semibold text-gray-900 lg:text-xl">
           {formatNumber(following)}
         </span>
         <span
-          className="text-xs"
+          className="text-xs lg:text-sm"
           style={{
             color: '#6B7280',
           }}

@@ -17,16 +17,17 @@ function ProfileInfo({ name, userId, gender = 'male' }: ProfileInfoProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 py-6">
+    <div className="flex flex-col items-center gap-4 py-6 lg:gap-6 lg:py-8">
       {/* 프로필 아이콘 */}
       <div
-        className="flex h-24 w-24 items-center justify-center rounded-full"
+        className="flex h-24 w-24 items-center justify-center rounded-full lg:h-32 lg:w-32"
         style={{
           backgroundColor: `${iconColor}40`,
         }}
       >
         <User
           size={48}
+          className="lg:h-16 lg:w-16"
           style={{
             color: iconColor,
           }}
@@ -34,11 +35,11 @@ function ProfileInfo({ name, userId, gender = 'male' }: ProfileInfoProps) {
       </div>
 
       {/* 이름 */}
-      <h2 className="text-xl font-bold text-gray-900">{name}</h2>
+      <h2 className="text-xl font-bold text-gray-900 lg:text-2xl">{name}</h2>
 
       {/* 아이디 */}
       <p
-        className="text-sm"
+        className="text-sm lg:text-base"
         style={{
           color: '#6B7280',
         }}
@@ -49,7 +50,7 @@ function ProfileInfo({ name, userId, gender = 'male' }: ProfileInfoProps) {
       {/* 프로필 수정 버튼 */}
       <Button
         onClick={handleEditProfile}
-        className="w-full max-w-xs text-white"
+        className="w-full max-w-xs text-white lg:max-w-sm lg:py-6 lg:text-base"
         style={{
           backgroundColor: '#B9BDDE',
         }}

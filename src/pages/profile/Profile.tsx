@@ -21,9 +21,9 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-20">
       <ProfileHeader />
-      <div className="mx-auto max-w-2xl px-4 py-4">
+      <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
         <ProfileInfo
           name={userData.name}
           userId={userData.userId}
