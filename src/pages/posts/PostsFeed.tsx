@@ -7,6 +7,7 @@ function PostsFeed() {
   const [activeTab, setActiveTab] = useState<'recommended' | 'following'>(
     'recommended'
   )
+  const [searchQuery, setSearchQuery] = useState('')
 
   // TODO: 실제 게시물 데이터로 교체
   const recommendedPosts = [
@@ -58,13 +59,35 @@ function PostsFeed() {
     },
   ]
 
-  const posts = activeTab === 'recommended' ? recommendedPosts : followingPosts
+  // 검색어에 따라 게시물 필터링
+  const filterPostsByHashtag = (
+    posts: typeof recommendedPosts,
+    query: string
+  ) => {
+    if (!query.trim()) return posts
+
+    const searchTerm = query.trim().toLowerCase().replace(/^#/, '') // # 제거
+
+    return posts.filter(post => {
+      if (!post.hashtags || post.hashtags.length === 0) return false
+      return post.hashtags.some(tag => tag.toLowerCase().includes(searchTerm))
+    })
+  }
+
+  const allPosts =
+    activeTab === 'recommended' ? recommendedPosts : followingPosts
+  const filteredPosts = filterPostsByHashtag(allPosts, searchQuery)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 pt-36 lg:pb-20 lg:pt-44">
-      <PostsFeedHeader activeTab={activeTab} onTabChange={setActiveTab} />
+      <PostsFeedHeader
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
-        <PostList posts={posts} />
+        <PostList posts={filteredPosts} />
       </div>
       <BottomNavigation />
     </div>

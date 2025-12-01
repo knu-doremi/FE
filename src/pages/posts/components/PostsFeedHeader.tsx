@@ -7,13 +7,23 @@ import FeedTabs from './FeedTabs'
 interface PostsFeedHeaderProps {
   activeTab: 'recommended' | 'following'
   onTabChange: (tab: 'recommended' | 'following') => void
+  searchQuery: string
+  onSearchChange: (query: string) => void
 }
 
-function PostsFeedHeader({ activeTab, onTabChange }: PostsFeedHeaderProps) {
+function PostsFeedHeader({
+  activeTab,
+  onTabChange,
+  searchQuery,
+  onSearchChange,
+}: PostsFeedHeaderProps) {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // TODO: 해시태그 검색 로직 구현
-    console.log('해시태그 검색')
+    // 검색은 실시간으로 처리되므로 여기서는 preventDefault만 수행
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value)
   }
 
   return (
@@ -52,6 +62,8 @@ function PostsFeedHeader({ activeTab, onTabChange }: PostsFeedHeaderProps) {
               type="text"
               placeholder="해시태그로 게시물 검색"
               className="w-full pl-10 pr-4"
+              value={searchQuery}
+              onChange={handleInputChange}
             />
           </div>
         </form>
