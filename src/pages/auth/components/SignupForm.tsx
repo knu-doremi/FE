@@ -198,6 +198,15 @@ function SignupForm() {
         >
           다음
         </Button>
+
+        <div className="text-center text-sm">
+          <Link
+            to="/login"
+            className="text-gray-600 underline hover:text-gray-900"
+          >
+            이미 계정이 있으신가요? 로그인
+          </Link>
+        </div>
       </form>
     )
   }
