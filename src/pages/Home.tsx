@@ -13,7 +13,7 @@ function Home() {
             className="h-10 w-10 object-contain lg:h-20 lg:w-20"
           />
           <h1 className="text-2xl font-bold text-gray-900 lg:text-6xl">
-            doremi
+            Doremi
           </h1>
         </div>
 
