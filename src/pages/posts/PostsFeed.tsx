@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import PostsFeedHeader from './components/PostsFeedHeader'
-import FeedTabs from './components/FeedTabs'
 import PostList from './components/PostList'
 
 function PostsFeed() {
@@ -62,9 +61,8 @@ function PostsFeed() {
   const posts = activeTab === 'recommended' ? recommendedPosts : followingPosts
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 pt-20 lg:pb-20 lg:pt-28">
-      <PostsFeedHeader />
-      <FeedTabs onTabChange={setActiveTab} />
+    <div className="min-h-screen bg-gray-50 pb-16 pt-36 lg:pb-20 lg:pt-44">
+      <PostsFeedHeader activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
         <PostList posts={posts} />
       </div>

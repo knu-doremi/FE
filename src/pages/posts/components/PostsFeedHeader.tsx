@@ -2,8 +2,14 @@ import { Link } from 'react-router-dom'
 import { Hash } from 'lucide-react'
 import logoImage from '@/assets/images/doremi-logo.png'
 import { Input } from '@/components/ui/input'
+import FeedTabs from './FeedTabs'
 
-function PostsFeedHeader() {
+interface PostsFeedHeaderProps {
+  activeTab: 'recommended' | 'following'
+  onTabChange: (tab: 'recommended' | 'following') => void
+}
+
+function PostsFeedHeader({ activeTab, onTabChange }: PostsFeedHeaderProps) {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     // TODO: 해시태그 검색 로직 구현
@@ -50,6 +56,9 @@ function PostsFeedHeader() {
           </div>
         </form>
       </div>
+
+      {/* 탭 네비게이션 */}
+      <FeedTabs activeTab={activeTab} onTabChange={onTabChange} />
     </header>
   )
 }

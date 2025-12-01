@@ -1,21 +1,15 @@
-import { useState } from 'react'
-
 interface FeedTabsProps {
+  activeTab: 'recommended' | 'following'
   onTabChange?: (tab: 'recommended' | 'following') => void
 }
 
-function FeedTabs({ onTabChange }: FeedTabsProps) {
-  const [activeTab, setActiveTab] = useState<'recommended' | 'following'>(
-    'recommended'
-  )
-
+function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
   const handleTabChange = (tab: 'recommended' | 'following') => {
-    setActiveTab(tab)
     onTabChange?.(tab)
   }
 
   return (
-    <div className="border-b border-gray-200 bg-white">
+    <div className="border-t border-gray-200 bg-white">
       <div className="mx-auto flex max-w-2xl">
         <button
           onClick={() => handleTabChange('recommended')}
