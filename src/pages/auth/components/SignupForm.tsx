@@ -74,7 +74,8 @@ function SignupForm() {
     if (touched[name]) {
       if (step === 1) {
         const validationErrors = validateSignupStep1({
-          ...formData,
+          userId: formData.userId,
+          password: formData.password,
           [name]: value,
         })
         setStep1Errors(prev => ({
@@ -123,7 +124,6 @@ function SignupForm() {
       const validationErrors = validateSignupStep1({
         userId: formData.userId,
         password: formData.password,
-        name: formData.name,
       })
       setStep1Errors(prev => ({
         ...prev,
