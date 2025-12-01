@@ -185,7 +185,16 @@ function SignupForm() {
 
         <Button
           type="submit"
-          className="w-full bg-pink-600 text-white hover:bg-pink-700"
+          className="w-full text-white"
+          style={{
+            backgroundColor: '#B9BDDE',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = '#A5A9D0'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = '#B9BDDE'
+          }}
         >
           다음
         </Button>
@@ -267,7 +276,16 @@ function SignupForm() {
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-pink-600 text-white hover:bg-pink-700"
+          className="flex-1 text-white"
+          style={{
+            backgroundColor: '#B9BDDE',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = '#A5A9D0'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = '#B9BDDE'
+          }}
         >
           회원가입 완료
         </Button>

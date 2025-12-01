@@ -96,7 +96,19 @@ function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+      <Button
+        type="submit"
+        className="w-full text-white"
+        style={{
+          backgroundColor: '#B9BDDE',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.backgroundColor = '#A5A9D0'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.backgroundColor = '#B9BDDE'
+        }}
+      >
         로그인
       </Button>
     </form>

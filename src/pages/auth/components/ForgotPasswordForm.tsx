@@ -157,7 +157,16 @@ function ForgotPasswordForm() {
 
       <Button
         type="submit"
-        className="w-full bg-blue-600 text-white hover:bg-blue-700"
+        className="w-full text-white"
+        style={{
+          backgroundColor: '#B9BDDE',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.backgroundColor = '#A5A9D0'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.backgroundColor = '#B9BDDE'
+        }}
       >
         비밀번호 찾기
       </Button>
