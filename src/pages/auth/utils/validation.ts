@@ -56,17 +56,15 @@ export function validateSignupStep1(data: {
   return errors
 }
 
-// 회원가입 2단계 유효성 검사 (이름, 이메일, 성별, 생일)
+// 회원가입 2단계 유효성 검사 (이름, 성별, 생일)
 export interface SignupStep2Errors {
   name?: string
-  email?: string
   gender?: string
   birthDate?: string
 }
 
 export function validateSignupStep2(data: {
   name: string
-  email: string
   gender: string
   birthDate: string
 }): SignupStep2Errors {
@@ -76,12 +74,6 @@ export function validateSignupStep2(data: {
     errors.name = '이름을 입력해주세요.'
   } else if (data.name.length < 2) {
     errors.name = '이름은 최소 2자 이상이어야 합니다.'
-  }
-
-  if (!data.email.trim()) {
-    errors.email = '이메일을 입력해주세요.'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.email = '올바른 이메일 형식이 아닙니다.'
   }
 
   if (!data.gender) {
@@ -112,7 +104,6 @@ export function validateSignupStep2(data: {
 // 회원가입 폼 전체 유효성 검사 (최종 제출용)
 export interface SignupFormErrors {
   userId?: string
-  email?: string
   password?: string
   name?: string
   gender?: string
@@ -121,7 +112,6 @@ export interface SignupFormErrors {
 
 export function validateSignupForm(data: {
   userId: string
-  email: string
   password: string
   name: string
   gender: string
@@ -133,7 +123,6 @@ export function validateSignupForm(data: {
   })
   const step2Errors = validateSignupStep2({
     name: data.name,
-    email: data.email,
     gender: data.gender,
     birthDate: data.birthDate,
   })

@@ -55,7 +55,6 @@ function SignupForm() {
     })
     setStep2Errors({
       name: validationErrors.name,
-      email: validationErrors.email,
       gender: validationErrors.gender,
       birthDate: validationErrors.birthDate,
     })
@@ -85,7 +84,6 @@ function SignupForm() {
       } else {
         const validationErrors = validateSignupStep2({
           name: formData.name,
-          email: formData.email,
           gender: formData.gender,
           birthDate: formData.birthDate,
           [name]: value,
@@ -105,7 +103,6 @@ function SignupForm() {
     // 실시간 유효성 검사
     const validationErrors = validateSignupStep2({
       name: formData.name,
-      email: formData.email,
       gender: formData.gender,
       birthDate: formData.birthDate,
       [name]: value,
@@ -132,7 +129,6 @@ function SignupForm() {
     } else {
       const validationErrors = validateSignupStep2({
         name: formData.name,
-        email: formData.email,
         gender: formData.gender,
         birthDate: formData.birthDate,
       })
@@ -216,24 +212,6 @@ function SignupForm() {
           required
         />
         <FormErrorMessage message={step2Errors.name} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="signup-email">이메일 (Email)</Label>
-        <Input
-          id="signup-email"
-          name="email"
-          type="email"
-          placeholder="이메일 주소 입력"
-          value={formData.email}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className={
-            step2Errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
-          }
-          required
-        />
-        <FormErrorMessage message={step2Errors.email} />
       </div>
 
       <div className="space-y-2">
