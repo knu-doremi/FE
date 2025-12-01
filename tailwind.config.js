@@ -55,11 +55,11 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // doremi 브랜드 컬러
+        // doremi 브랜드 컬러 (로고에서 추출한 색상)
         doremi: {
-          purple: '#9333EA', // 보라색 계열
-          'purple-light': '#A855F7',
-          'purple-dark': '#7E22CE',
+          blue: '#B7CEE5', // 밝은 파란색
+          lavender: '#DCB0CE', // 밝은 보라색/라벤더
+          'blue-purple': '#B9BDDE', // 파란-보라색
         },
       },
       borderRadius: {

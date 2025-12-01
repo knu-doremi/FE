@@ -87,18 +87,12 @@ function LoginForm() {
         <FormErrorMessage message={errors.password} />
       </div>
 
-      <div className="flex items-center justify-between text-sm">
+      <div className="text-sm">
         <Link
           to="/forgot-password"
           className="text-gray-600 underline hover:text-gray-900"
         >
           비밀번호 찾기
-        </Link>
-        <Link
-          to="/signup"
-          className="text-gray-600 underline hover:text-gray-900"
-        >
-          회원가입
         </Link>
       </div>
 
