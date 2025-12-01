@@ -2,6 +2,7 @@ import ProfileHeader from './components/ProfileHeader'
 import ProfileInfo from './components/ProfileInfo'
 import ProfileStats from './components/ProfileStats'
 import ProfileTabs from './components/ProfileTabs'
+import PostGrid from './components/PostGrid'
 
 function Profile() {
   // TODO: 실제 사용자 데이터로 교체
@@ -15,6 +16,7 @@ function Profile() {
       following: 88,
       posts: 123,
     },
+    posts: [{ id: 1 }, { id: 2 }, { id: 3 }],
   }
 
   return (
@@ -33,8 +35,8 @@ function Profile() {
           posts={userData.stats.posts}
         />
         <ProfileTabs
-          postsContent={<div>게시물 콘텐츠</div>}
-          savedContent={<div>저장됨 콘텐츠</div>}
+          postsContent={<PostGrid posts={userData.posts} />}
+          savedContent={<PostGrid posts={[]} />}
         />
       </div>
     </div>
