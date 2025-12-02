@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import SearchHeader from './components/SearchHeader'
 import RecommendedUsers from './components/RecommendedUsers'
+import SearchResults from './components/SearchResults'
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState('')
 
   // TODO: 실제 추천 사용자 데이터로 교체
-  const [recommendedUsers, setRecommendedUsers] = useState([
+  const [allUsers, setAllUsers] = useState([
     {
       id: '1',
       name: '코딩 마스터',
@@ -38,10 +39,41 @@ function Search() {
       userId: 'photo_J',
       isFollowing: false,
     },
+    {
+      id: '6',
+      name: '음악 애호가',
+      userId: 'music_lover',
+      isFollowing: false,
+    },
+    {
+      id: '7',
+      name: '요리 전문가',
+      userId: 'chef_master',
+      isFollowing: false,
+    },
   ])
 
+  // 검색어에 따라 사용자 필터링
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+
+    const query = searchQuery.trim().toLowerCase()
+
+    return allUsers.filter(
+      user =>
+        user.name.toLowerCase().includes(query) ||
+        user.userId.toLowerCase().includes(query)
+    )
+  }, [searchQuery, allUsers])
+
+  // 추천 사용자 (검색어가 없을 때만 표시)
+  const recommendedUsers = useMemo(() => {
+    if (searchQuery.trim()) return []
+    return allUsers.slice(0, 5) // 처음 5명만 추천
+  }, [searchQuery, allUsers])
+
   const handleFollowToggle = (userId: string) => {
-    setRecommendedUsers(prevUsers =>
+    setAllUsers(prevUsers =>
       prevUsers.map(user =>
         user.userId === userId
           ? { ...user, isFollowing: !user.isFollowing }
@@ -58,10 +90,17 @@ function Search() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
-        <RecommendedUsers
-          users={recommendedUsers}
-          onFollowToggle={handleFollowToggle}
-        />
+        {searchQuery.trim() ? (
+          <SearchResults
+            users={searchResults}
+            onFollowToggle={handleFollowToggle}
+          />
+        ) : (
+          <RecommendedUsers
+            users={recommendedUsers}
+            onFollowToggle={handleFollowToggle}
+          />
+        )}
       </div>
       <BottomNavigation />
     </div>
