@@ -53,17 +53,13 @@ function Search() {
     },
   ])
 
-  // 검색어에 따라 사용자 필터링
+  // 검색어에 따라 사용자 필터링 (사용자 ID로만 검색)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
 
     const query = searchQuery.trim().toLowerCase()
 
-    return allUsers.filter(
-      user =>
-        user.name.toLowerCase().includes(query) ||
-        user.userId.toLowerCase().includes(query)
-    )
+    return allUsers.filter(user => user.userId.toLowerCase().includes(query))
   }, [searchQuery, allUsers])
 
   // 추천 사용자 (검색어가 없을 때만 표시)
