@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { Search as SearchIcon } from 'lucide-react'
+import logoImage from '@/assets/images/doremi-logo.png'
 import { Input } from '@/components/ui/input'
 
 interface SearchHeaderProps {
@@ -18,9 +20,26 @@ function SearchHeader({ searchQuery, onSearchChange }: SearchHeaderProps) {
 
   return (
     <div className="mb-4 lg:mb-6">
-      <h1 className="mb-4 text-xl font-bold text-gray-900 lg:mb-6 lg:text-2xl">
-        검색
-      </h1>
+      {/* 로고 */}
+      <div className="mb-4 flex items-center justify-center lg:mb-6">
+        <Link to="/" className="flex items-center gap-2 lg:gap-3">
+          <img
+            src={logoImage}
+            alt="doremi"
+            className="h-8 w-8 object-contain lg:h-10 lg:w-10"
+          />
+          <span
+            className="text-lg font-bold lg:text-xl"
+            style={{
+              color: '#7C7FA8',
+            }}
+          >
+            doremi
+          </span>
+        </Link>
+      </div>
+
+      {/* 검색바 */}
       <form onSubmit={handleSearch} className="w-full">
         <div className="relative">
           <SearchIcon
