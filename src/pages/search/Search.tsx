@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import SearchHeader from './components/SearchHeader'
 import RecommendedUsers from './components/RecommendedUsers'
+import RecommendedExplore from './components/RecommendedExplore'
 import SearchResults from './components/SearchResults'
 
 function Search() {
@@ -96,10 +97,13 @@ function Search() {
             onFollowToggle={handleFollowToggle}
           />
         ) : (
-          <RecommendedUsers
-            users={recommendedUsers}
-            onFollowToggle={handleFollowToggle}
-          />
+          <>
+            <RecommendedUsers
+              users={recommendedUsers}
+              onFollowToggle={handleFollowToggle}
+            />
+            <RecommendedExplore />
+          </>
         )}
       </div>
       <BottomNavigation />
