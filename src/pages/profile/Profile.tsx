@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import ProfileHeader from './components/ProfileHeader'
 import ProfileInfo from './components/ProfileInfo'
 import ProfileStats from './components/ProfileStats'
@@ -6,10 +8,15 @@ import PostGrid from './components/PostGrid'
 import BottomNavigation from './components/BottomNavigation'
 
 function Profile() {
-  // TODO: 실제 사용자 데이터로 교체
+  const { userId: urlUserId } = useParams<{ userId?: string }>()
+  const isOwnProfile = !urlUserId
+
+  // TODO: 실제 사용자 데이터로 교체 (urlUserId가 있으면 해당 사용자 데이터, 없으면 본인 데이터)
+  const [isFollowing, setIsFollowing] = useState(false)
+
   const userData = {
-    name: '사용자',
-    userId: 'user_officials',
+    name: urlUserId ? `사용자_${urlUserId}` : '사용자',
+    userId: urlUserId || 'user_officials',
     gender: 'female' as const,
     birthDate: '2000-01-01',
     stats: {
@@ -22,11 +29,22 @@ function Profile() {
     bookmarkedPosts: [{ id: 4 }, { id: 5 }, { id: 6 }, { id: 7 }],
   }
 
+  const handleFollowToggle = () => {
+    setIsFollowing(prev => !prev)
+    // TODO: API 호출로 팔로우/언팔로우 처리
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-16 pt-16 lg:pb-20 lg:pt-20">
-      <ProfileHeader />
+      <ProfileHeader isOwnProfile={isOwnProfile} />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
-        <ProfileInfo name={userData.name} userId={userData.userId} />
+        <ProfileInfo
+          name={userData.name}
+          userId={userData.userId}
+          isOwnProfile={isOwnProfile}
+          isFollowing={isFollowing}
+          onFollowToggle={handleFollowToggle}
+        />
         <ProfileStats
           totalLikes={userData.stats.totalLikes}
           followers={userData.stats.followers}
@@ -34,11 +52,12 @@ function Profile() {
         />
         <ProfileTabs
           postsContent={
-            <PostGrid posts={userData.posts} showAddButton={true} />
+            <PostGrid posts={userData.posts} showAddButton={isOwnProfile} />
           }
           savedContent={
             <PostGrid posts={userData.bookmarkedPosts} showAddButton={false} />
           }
+          showBookmarkTab={isOwnProfile}
         />
       </div>
       <BottomNavigation />

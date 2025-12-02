@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -14,8 +15,19 @@ interface RecommendedUsersProps {
 }
 
 function RecommendedUsers({ users, onFollowToggle }: RecommendedUsersProps) {
+  const navigate = useNavigate()
+
   if (users.length === 0) {
     return null
+  }
+
+  const handleUserClick = (userId: string) => {
+    navigate(`/users/${userId}`)
+  }
+
+  const handleFollowClick = (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation()
+    onFollowToggle(userId)
   }
 
   return (
@@ -27,7 +39,8 @@ function RecommendedUsers({ users, onFollowToggle }: RecommendedUsersProps) {
         {users.map(user => (
           <div
             key={user.id}
-            className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm lg:p-5"
+            onClick={() => handleUserClick(user.userId)}
+            className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md lg:p-5"
           >
             <div className="flex items-center gap-3 lg:gap-4">
               <div
@@ -59,7 +72,7 @@ function RecommendedUsers({ users, onFollowToggle }: RecommendedUsersProps) {
               </div>
             </div>
             <Button
-              onClick={() => onFollowToggle(user.userId)}
+              onClick={e => handleFollowClick(e, user.userId)}
               className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors lg:px-6 lg:py-2.5 lg:text-base ${
                 user.isFollowing
                   ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
