@@ -5,13 +5,26 @@ import { Button } from '@/components/ui/button'
 interface ProfileInfoProps {
   name: string
   userId: string
+  isOwnProfile?: boolean
+  isFollowing?: boolean
+  onFollowToggle?: () => void
 }
 
-function ProfileInfo({ name, userId }: ProfileInfoProps) {
+function ProfileInfo({
+  name,
+  userId,
+  isOwnProfile = true,
+  isFollowing = false,
+  onFollowToggle,
+}: ProfileInfoProps) {
   const navigate = useNavigate()
 
   const handleEditProfile = () => {
     navigate('/profile/edit')
+  }
+
+  const handleFollowClick = () => {
+    onFollowToggle?.()
   }
 
   return (
@@ -45,22 +58,44 @@ function ProfileInfo({ name, userId }: ProfileInfoProps) {
         @{userId}
       </p>
 
-      {/* 프로필 수정 버튼 */}
-      <Button
-        onClick={handleEditProfile}
-        className="w-full max-w-xs text-white lg:max-w-sm lg:py-6 lg:text-base"
-        style={{
-          backgroundColor: '#B9BDDE',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.backgroundColor = '#A5A9D0'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.backgroundColor = '#B9BDDE'
-        }}
-      >
-        프로필 수정
-      </Button>
+      {/* 프로필 수정 버튼 (본인 프로필일 때만 표시) */}
+      {isOwnProfile ? (
+        <Button
+          onClick={handleEditProfile}
+          className="w-full max-w-xs cursor-pointer text-white lg:max-w-sm lg:py-6 lg:text-base"
+          style={{
+            backgroundColor: '#B9BDDE',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = '#A5A9D0'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = '#B9BDDE'
+          }}
+        >
+          프로필 수정
+        </Button>
+      ) : (
+        <Button
+          onClick={handleFollowClick}
+          className="w-full max-w-xs cursor-pointer text-white lg:max-w-sm lg:py-6 lg:text-base"
+          style={{
+            backgroundColor: isFollowing ? '#9CA3AF' : '#B9BDDE',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = isFollowing
+              ? '#6B7280'
+              : '#A5A9D0'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = isFollowing
+              ? '#9CA3AF'
+              : '#B9BDDE'
+          }}
+        >
+          {isFollowing ? '팔로잉' : '팔로우'}
+        </Button>
+      )}
     </div>
   )
 }

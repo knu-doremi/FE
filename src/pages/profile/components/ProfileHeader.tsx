@@ -1,7 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import logoImage from '@/assets/images/doremi-logo.png'
 
-function ProfileHeader() {
+interface ProfileHeaderProps {
+  isOwnProfile?: boolean
+}
+
+function ProfileHeader({ isOwnProfile = true }: ProfileHeaderProps) {
+  const navigate = useNavigate()
+
   const handleLogout = () => {
     // TODO: 로그아웃 로직 구현
     console.log('로그아웃')
@@ -25,12 +32,21 @@ function ProfileHeader() {
         </span>
       </Link>
 
-      <button
-        onClick={handleLogout}
-        className="cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
-      >
-        로그아웃
-      </button>
+      {isOwnProfile ? (
+        <button
+          onClick={handleLogout}
+          className="cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
+        >
+          로그아웃
+        </button>
+      ) : (
+        <button
+          onClick={() => navigate(-1)}
+          className="cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-base"
+        >
+          <ArrowLeft size={20} className="inline lg:h-6 lg:w-6" />
+        </button>
+      )}
     </header>
   )
 }

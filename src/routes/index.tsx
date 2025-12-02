@@ -8,6 +8,7 @@ import EditProfile from '@/pages/profile/EditProfile'
 import CreatePost from '@/pages/posts/CreatePost'
 import PostDetail from '@/pages/posts/PostDetail'
 import PostsFeed from '@/pages/posts/PostsFeed'
+import Search from '@/pages/search/Search'
 import NotFound from '@/pages/NotFound'
 
 export const router = createBrowserRouter([
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
     element: <Profile />,
   },
   {
+    path: '/users/:userId',
+    element: <Profile />,
+  },
+  {
     path: '/profile/edit',
     element: <EditProfile />,
   },
@@ -46,6 +51,10 @@ export const router = createBrowserRouter([
   {
     path: '/posts/:postId',
     element: <PostDetail />,
+  },
+  {
+    path: '/search',
+    element: <Search />,
   },
   {
     path: '*',
