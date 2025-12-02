@@ -43,7 +43,12 @@ function SearchResults({ users, onFollowToggle }: SearchResultsProps) {
 
   return (
     <div className="mb-6 lg:mb-8">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900 lg:mb-6 lg:text-xl">
+      <h2
+        className="mb-4 text-lg font-semibold lg:mb-6 lg:text-xl"
+        style={{
+          color: '#7C7FA8',
+        }}
+      >
         검색 결과
       </h2>
       <div className="space-y-3 lg:space-y-4">
