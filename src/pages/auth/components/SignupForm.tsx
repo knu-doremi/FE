@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,10 +18,12 @@ import {
   type SignupStep1Errors,
   type SignupStep2Errors,
 } from '../utils/validation'
-import { checkId } from '@/lib/api/auth'
+import { checkId, register } from '@/lib/api/auth'
 import { handleApiError } from '@/lib/api/types'
+import { formatDateToYYYYMMDD, formatGenderToAPI } from '@/lib/utils/format'
 
 function SignupForm() {
+  const navigate = useNavigate()
   const [step, setStep] = useState<1 | 2>(1)
   const [formData, setFormData] = useState({
     userId: '',
@@ -37,6 +39,8 @@ function SignupForm() {
   const [isCheckingId, setIsCheckingId] = useState(false)
   const [isIdAvailable, setIsIdAvailable] = useState<boolean | null>(null)
   const [idCheckError, setIdCheckError] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [apiError, setApiError] = useState<string>('')
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleNext = (e: React.FormEvent) => {
@@ -64,7 +68,7 @@ function SignupForm() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validateSignupForm(formData)
     setStep1Errors({
@@ -76,10 +80,34 @@ function SignupForm() {
       gender: validationErrors.gender,
       birthDate: validationErrors.birthDate,
     })
+    setApiError('')
 
     if (Object.keys(validationErrors).length === 0) {
-      // TODO: API 연동
-      console.log('Signup:', formData)
+      setIsSubmitting(true)
+      try {
+        // 데이터 형식 변환
+        const registerData = {
+          userid: formData.userId,
+          password: formData.password,
+          name: formData.name,
+          sex: formatGenderToAPI(formData.gender),
+          birthdate: formatDateToYYYYMMDD(formData.birthDate),
+        }
+
+        const response = await register(registerData)
+
+        if (response.result) {
+          // 회원가입 성공 시 로그인 화면으로 리다이렉트
+          navigate('/login')
+        } else {
+          setApiError(response.message || '회원가입에 실패했습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setApiError(apiError.message || '회원가입 중 오류가 발생했습니다.')
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -416,29 +444,41 @@ function SignupForm() {
         <FormErrorMessage message={step2Errors.birthDate} />
       </div>
 
+      {apiError && (
+        <div className="rounded-md bg-red-50 p-3">
+          <p className="text-sm text-red-600">{apiError}</p>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button
           type="button"
           variant="outline"
-          className="flex-1"
+          className="flex-1 cursor-pointer"
           onClick={() => setStep(1)}
+          disabled={isSubmitting}
         >
           이전
         </Button>
         <Button
           type="submit"
-          className="flex-1 text-white"
+          className="flex-1 cursor-pointer text-white"
+          disabled={isSubmitting}
           style={{
-            backgroundColor: '#B9BDDE',
+            backgroundColor: isSubmitting ? '#9CA3AF' : '#B9BDDE',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.backgroundColor = '#A5A9D0'
+            if (!isSubmitting) {
+              e.currentTarget.style.backgroundColor = '#A5A9D0'
+            }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = '#B9BDDE'
+            if (!isSubmitting) {
+              e.currentTarget.style.backgroundColor = '#B9BDDE'
+            }
           }}
         >
-          회원가입 완료
+          {isSubmitting ? '처리 중...' : '회원가입 완료'}
         </Button>
       </div>
 
