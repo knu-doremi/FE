@@ -36,13 +36,16 @@ function checkStorageAvailable(): boolean {
       return false
     }
 
+    // 실제 접근 시도 전에 가능 여부를 확인
+    // 일부 브라우저 컨텍스트에서는 접근 자체가 차단될 수 있음
     storage.setItem(test, test)
     storage.removeItem(test)
     storageAvailable = true
     return true
-  } catch {
+  } catch (error) {
     // 모든 에러를 조용히 처리 (Promise rejection 방지)
     // "Access to storage is not allowed from this context" 등의 에러도 여기서 처리
+    // 에러를 콘솔에 출력하지 않음
     storageAvailable = false
     return false
   }
@@ -59,8 +62,9 @@ export function setStorageItem(key: string, value: string): boolean {
   try {
     window.localStorage.setItem(key, value)
     return true
-  } catch {
+  } catch (error) {
     // localStorage 접근이 차단된 경우 조용히 실패
+    // 에러를 콘솔에 출력하지 않음
     return false
   }
 }
@@ -75,8 +79,9 @@ export function getStorageItem(key: string): string | null {
 
   try {
     return window.localStorage.getItem(key)
-  } catch {
+  } catch (error) {
     // localStorage 접근이 차단된 경우 null 반환
+    // 에러를 콘솔에 출력하지 않음
     return null
   }
 }
@@ -92,8 +97,9 @@ export function removeStorageItem(key: string): boolean {
   try {
     window.localStorage.removeItem(key)
     return true
-  } catch {
+  } catch (error) {
     // localStorage 접근이 차단된 경우 조용히 실패
+    // 에러를 콘솔에 출력하지 않음
     return false
   }
 }
