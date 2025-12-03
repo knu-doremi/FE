@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,8 @@ import {
   type SignupStep1Errors,
   type SignupStep2Errors,
 } from '../utils/validation'
+import { checkId } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/types'
 
 function SignupForm() {
   const [step, setStep] = useState<1 | 2>(1)
@@ -32,6 +34,10 @@ function SignupForm() {
   const [step1Errors, setStep1Errors] = useState<SignupStep1Errors>({})
   const [step2Errors, setStep2Errors] = useState<SignupStep2Errors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [isCheckingId, setIsCheckingId] = useState(false)
+  const [isIdAvailable, setIsIdAvailable] = useState<boolean | null>(null)
+  const [idCheckError, setIdCheckError] = useState<string>('')
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,8 +47,20 @@ function SignupForm() {
     })
     setStep1Errors(validationErrors)
 
-    if (Object.keys(validationErrors).length === 0) {
+    // 아이디 중복확인이 완료되지 않았거나 사용 불가능한 경우
+    if (isIdAvailable === false) {
+      setIdCheckError('아이디 중복확인을 완료해주세요.')
+      return
+    }
+
+    if (Object.keys(validationErrors).length === 0 && isIdAvailable === true) {
       setStep(2)
+    } else if (
+      Object.keys(validationErrors).length === 0 &&
+      isIdAvailable === null
+    ) {
+      // 아이디 중복확인을 하지 않은 경우
+      setIdCheckError('아이디 중복확인을 해주세요.')
     }
   }
 
@@ -65,9 +83,66 @@ function SignupForm() {
     }
   }
 
+  // 아이디 중복확인 (디바운싱 적용)
+  useEffect(() => {
+    if (step === 1 && formData.userId && touched.userId) {
+      // 기존 타이머 취소
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+
+      // 아이디가 변경되면 중복확인 결과 초기화
+      setIsIdAvailable(null)
+      setIdCheckError('')
+
+      // 디바운싱: 500ms 후에 API 호출
+      debounceTimerRef.current = setTimeout(async () => {
+        const validationErrors = validateSignupStep1({
+          userId: formData.userId,
+          password: formData.password,
+        })
+
+        // 아이디 형식이 유효한 경우에만 중복확인
+        if (!validationErrors.userId) {
+          setIsCheckingId(true)
+          try {
+            const response = await checkId({ userid: formData.userId })
+            if (response.result && response.count === 0) {
+              setIsIdAvailable(true)
+              setIdCheckError('')
+            } else {
+              setIsIdAvailable(false)
+              setIdCheckError('이미 사용 중인 아이디입니다.')
+            }
+          } catch (error) {
+            const apiError = handleApiError(error)
+            setIsIdAvailable(false)
+            setIdCheckError(
+              apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+            )
+          } finally {
+            setIsCheckingId(false)
+          }
+        }
+      }, 500)
+    }
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [formData.userId, step, touched.userId])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+
+    // 아이디가 변경되면 중복확인 결과 초기화
+    if (name === 'userId') {
+      setIsIdAvailable(null)
+      setIdCheckError('')
+    }
 
     // 실시간 유효성 검사 (필드가 한 번이라도 터치된 경우)
     if (touched[name]) {
@@ -93,6 +168,40 @@ function SignupForm() {
           [name]: validationErrors[name as keyof SignupStep2Errors],
         }))
       }
+    }
+  }
+
+  // 수동 아이디 중복확인 버튼 클릭 핸들러
+  const handleCheckId = async () => {
+    const validationErrors = validateSignupStep1({
+      userId: formData.userId,
+      password: formData.password,
+    })
+
+    if (validationErrors.userId) {
+      setStep1Errors(validationErrors)
+      return
+    }
+
+    setIsCheckingId(true)
+    setIdCheckError('')
+    try {
+      const response = await checkId({ userid: formData.userId })
+      if (response.result && response.count === 0) {
+        setIsIdAvailable(true)
+        setIdCheckError('')
+      } else {
+        setIsIdAvailable(false)
+        setIdCheckError('이미 사용 중인 아이디입니다.')
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      setIsIdAvailable(false)
+      setIdCheckError(
+        apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+      )
+    } finally {
+      setIsCheckingId(false)
     }
   }
 
@@ -145,22 +254,56 @@ function SignupForm() {
       <form onSubmit={handleNext} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="signup-userId">아이디 (ID)</Label>
-          <Input
-            id="signup-userId"
-            name="userId"
-            type="text"
-            placeholder="사용할 사용자 ID 입력"
-            value={formData.userId}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={
-              step1Errors.userId
-                ? 'border-red-500 focus-visible:ring-red-500'
-                : ''
-            }
-            required
-          />
+          <div className="flex gap-2">
+            <Input
+              id="signup-userId"
+              name="userId"
+              type="text"
+              placeholder="사용할 사용자 ID 입력"
+              value={formData.userId}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={
+                step1Errors.userId || isIdAvailable === false
+                  ? 'border-red-500 focus-visible:ring-red-500'
+                  : isIdAvailable === true
+                    ? 'border-green-500 focus-visible:ring-green-500'
+                    : ''
+              }
+              required
+            />
+            <Button
+              type="button"
+              onClick={handleCheckId}
+              disabled={
+                isCheckingId || !formData.userId || !!step1Errors.userId
+              }
+              className="cursor-pointer whitespace-nowrap"
+              style={{
+                backgroundColor: '#B9BDDE',
+                color: '#FFFFFF',
+              }}
+              onMouseEnter={e => {
+                if (!isCheckingId && formData.userId && !step1Errors.userId) {
+                  e.currentTarget.style.backgroundColor = '#A5A9D0'
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isCheckingId && formData.userId && !step1Errors.userId) {
+                  e.currentTarget.style.backgroundColor = '#B9BDDE'
+                }
+              }}
+            >
+              {isCheckingId ? '확인 중...' : '중복확인'}
+            </Button>
+          </div>
           <FormErrorMessage message={step1Errors.userId} />
+          {idCheckError && (
+            <p className="text-sm text-red-600">{idCheckError}</p>
+          )}
+          {isIdAvailable === true && !idCheckError && (
+            <p className="text-sm text-green-600">사용 가능한 아이디입니다.</p>
+          )}
         </div>
 
         <div className="space-y-2">
