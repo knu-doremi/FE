@@ -135,18 +135,17 @@ function SignupForm() {
           setIsCheckingId(true)
           try {
             const response = await checkId({ userid: formData.userId })
+            console.log('아이디 중복확인 응답:', response) // 디버깅용
             if (response.result && response.count === 0) {
               setIsIdAvailable(true)
               setIdCheckError('')
             } else {
               setIsIdAvailable(false)
-              // 백엔드 메시지가 영어인 경우 한국어로 변환
-              const errorMessage =
-                response.message?.toLowerCase().includes('already exists') ||
-                response.message?.toLowerCase().includes('username')
-                  ? '이미 사용 중인 아이디입니다.'
-                  : response.message || '이미 사용 중인 아이디입니다.'
-              setIdCheckError(errorMessage)
+              // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
+              // 모든 경우에 한국어 메시지로 통일
+              const koreanMessage = '이미 사용 중인 아이디입니다.'
+              console.log('에러 메시지 설정:', koreanMessage) // 디버깅용
+              setIdCheckError(koreanMessage)
             }
           } catch (error) {
             const apiError = handleApiError(error)
@@ -157,8 +156,20 @@ function SignupForm() {
                 '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
               )
             } else {
+              // 영어 메시지도 한국어로 변환
+              const lowerMessage = (apiError.message || '').toLowerCase()
+              const isEnglishMessage =
+                lowerMessage.includes('already exists') ||
+                lowerMessage.includes('username') ||
+                lowerMessage.includes('exists') ||
+                lowerMessage.includes('user') ||
+                /[a-zA-Z]/.test(apiError.message || '')
+
               setIdCheckError(
-                apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+                isEnglishMessage
+                  ? '이미 사용 중인 아이디입니다.'
+                  : apiError.message ||
+                      '아이디 중복확인 중 오류가 발생했습니다.'
               )
             }
           } finally {
@@ -228,18 +239,17 @@ function SignupForm() {
     setIdCheckError('')
     try {
       const response = await checkId({ userid: formData.userId })
+      console.log('아이디 중복확인 응답 (수동):', response) // 디버깅용
       if (response.result && response.count === 0) {
         setIsIdAvailable(true)
         setIdCheckError('')
       } else {
         setIsIdAvailable(false)
-        // 백엔드 메시지가 영어인 경우 한국어로 변환
-        const errorMessage =
-          response.message?.toLowerCase().includes('already exists') ||
-          response.message?.toLowerCase().includes('username')
-            ? '이미 사용 중인 아이디입니다.'
-            : response.message || '이미 사용 중인 아이디입니다.'
-        setIdCheckError(errorMessage)
+        // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
+        // 모든 경우에 한국어 메시지로 통일
+        const koreanMessage = '이미 사용 중인 아이디입니다.'
+        console.log('에러 메시지 설정 (수동):', koreanMessage) // 디버깅용
+        setIdCheckError(koreanMessage)
       }
     } catch (error) {
       const apiError = handleApiError(error)
@@ -248,8 +258,19 @@ function SignupForm() {
       if (apiError.status === 500) {
         setIdCheckError('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       } else {
+        // 영어 메시지도 한국어로 변환
+        const lowerMessage = (apiError.message || '').toLowerCase()
+        const isEnglishMessage =
+          lowerMessage.includes('already exists') ||
+          lowerMessage.includes('username') ||
+          lowerMessage.includes('exists') ||
+          lowerMessage.includes('user') ||
+          /[a-zA-Z]/.test(apiError.message || '')
+
         setIdCheckError(
-          apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+          isEnglishMessage
+            ? '이미 사용 중인 아이디입니다.'
+            : apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
         )
       }
     } finally {
