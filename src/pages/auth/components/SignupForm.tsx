@@ -97,7 +97,8 @@ function SignupForm() {
         const response = await register(registerData)
 
         if (response.result) {
-          // 회원가입 성공 시 로그인 화면으로 리다이렉트
+          // 회원가입 성공 시 알림 표시 후 로그인 화면으로 리다이렉트
+          alert('회원가입이 완료되었습니다. 로그인 해주세요.')
           navigate('/login')
         } else {
           setApiError(response.message || '회원가입에 실패했습니다.')
@@ -135,7 +136,6 @@ function SignupForm() {
           setIsCheckingId(true)
           try {
             const response = await checkId({ userid: formData.userId })
-            console.log('아이디 중복확인 응답:', response) // 디버깅용
             if (response.result && response.count === 0) {
               setIsIdAvailable(true)
               setIdCheckError('')
@@ -143,9 +143,7 @@ function SignupForm() {
               setIsIdAvailable(false)
               // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
               // 모든 경우에 한국어 메시지로 통일
-              const koreanMessage = '이미 사용 중인 아이디입니다.'
-              console.log('에러 메시지 설정:', koreanMessage) // 디버깅용
-              setIdCheckError(koreanMessage)
+              setIdCheckError('이미 사용 중인 아이디입니다.')
             }
           } catch (error) {
             const apiError = handleApiError(error)
@@ -239,7 +237,6 @@ function SignupForm() {
     setIdCheckError('')
     try {
       const response = await checkId({ userid: formData.userId })
-      console.log('아이디 중복확인 응답 (수동):', response) // 디버깅용
       if (response.result && response.count === 0) {
         setIsIdAvailable(true)
         setIdCheckError('')
@@ -247,9 +244,7 @@ function SignupForm() {
         setIsIdAvailable(false)
         // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
         // 모든 경우에 한국어 메시지로 통일
-        const koreanMessage = '이미 사용 중인 아이디입니다.'
-        console.log('에러 메시지 설정 (수동):', koreanMessage) // 디버깅용
-        setIdCheckError(koreanMessage)
+        setIdCheckError('이미 사용 중인 아이디입니다.')
       }
     } catch (error) {
       const apiError = handleApiError(error)

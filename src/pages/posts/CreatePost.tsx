@@ -55,11 +55,6 @@ function CreatePost() {
 
     if (Object.keys(validationErrors).length === 0) {
       // TODO: API 연동
-      console.log('게시물 생성:', {
-        content: formData.content,
-        image: formData.image,
-        hashtags: formData.hashtags,
-      })
       navigate('/profile')
     }
   }

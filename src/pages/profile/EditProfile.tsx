@@ -54,7 +54,6 @@ function EditProfile() {
 
     if (Object.keys(validationErrors).length === 0) {
       // TODO: API 연동
-      console.log('프로필 수정:', formData)
       navigate('/profile')
     }
   }
