@@ -55,4 +55,3 @@ export function formatGenderToAPI(gender: string): 'M' | 'F' {
 export function formatGenderFromAPI(gender: string): 'male' | 'female' {
   return gender === 'M' ? 'male' : 'female'
 }
-
