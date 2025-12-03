@@ -1,8 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import { getStorageItem, removeStorageItem } from '@/lib/utils/storage'
 
-// API 기본 URL (환경 변수에서 가져오거나 기본값 사용)
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+// API 기본 URL
+// 개발 환경에서는 Vite 프록시를 사용하므로 상대 경로 사용
+// 프로덕션에서는 환경 변수로 설정된 절대 경로 사용
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
@@ -17,9 +19,13 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   config => {
     // 토큰이 있다면 헤더에 추가
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    try {
+      const token = getStorageItem('token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+    } catch {
+      // localStorage 접근 실패 시 무시하고 계속 진행
     }
     return config
   },
@@ -37,7 +43,11 @@ apiClient.interceptors.response.use(
     // 401 Unauthorized 에러 처리
     if (error.response?.status === 401) {
       // 로그인 페이지로 리다이렉트하거나 토큰 제거
-      localStorage.removeItem('token')
+      try {
+        removeStorageItem('token')
+      } catch {
+        // localStorage 접근 실패 시 무시
+      }
       // window.location.href = '/login'
     }
     return Promise.reject(error)

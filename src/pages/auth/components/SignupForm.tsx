@@ -140,14 +140,27 @@ function SignupForm() {
               setIdCheckError('')
             } else {
               setIsIdAvailable(false)
-              setIdCheckError('이미 사용 중인 아이디입니다.')
+              // 백엔드 메시지가 영어인 경우 한국어로 변환
+              const errorMessage =
+                response.message?.toLowerCase().includes('already exists') ||
+                response.message?.toLowerCase().includes('username')
+                  ? '이미 사용 중인 아이디입니다.'
+                  : response.message || '이미 사용 중인 아이디입니다.'
+              setIdCheckError(errorMessage)
             }
           } catch (error) {
             const apiError = handleApiError(error)
             setIsIdAvailable(false)
-            setIdCheckError(
-              apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
-            )
+            // 500 에러인 경우 더 명확한 메시지 표시
+            if (apiError.status === 500) {
+              setIdCheckError(
+                '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+              )
+            } else {
+              setIdCheckError(
+                apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+              )
+            }
           } finally {
             setIsCheckingId(false)
           }
@@ -220,14 +233,25 @@ function SignupForm() {
         setIdCheckError('')
       } else {
         setIsIdAvailable(false)
-        setIdCheckError('이미 사용 중인 아이디입니다.')
+        // 백엔드 메시지가 영어인 경우 한국어로 변환
+        const errorMessage =
+          response.message?.toLowerCase().includes('already exists') ||
+          response.message?.toLowerCase().includes('username')
+            ? '이미 사용 중인 아이디입니다.'
+            : response.message || '이미 사용 중인 아이디입니다.'
+        setIdCheckError(errorMessage)
       }
     } catch (error) {
       const apiError = handleApiError(error)
       setIsIdAvailable(false)
-      setIdCheckError(
-        apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
-      )
+      // 500 에러인 경우 더 명확한 메시지 표시
+      if (apiError.status === 500) {
+        setIdCheckError('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } else {
+        setIdCheckError(
+          apiError.message || '아이디 중복확인 중 오류가 발생했습니다.'
+        )
+      }
     } finally {
       setIsCheckingId(false)
     }
