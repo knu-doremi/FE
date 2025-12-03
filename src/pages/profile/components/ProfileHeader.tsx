@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import logoImage from '@/assets/images/doremi-logo.png'
+import { removeStorageItem } from '@/lib/utils/storage'
 
 interface ProfileHeaderProps {
   isOwnProfile?: boolean
@@ -10,8 +11,13 @@ function ProfileHeader({ isOwnProfile = true }: ProfileHeaderProps) {
   const navigate = useNavigate()
 
   const handleLogout = () => {
-    // TODO: 로그아웃 로직 구현
-    console.log('로그아웃')
+    // localStorage에서 사용자 정보 및 인증 정보 제거
+    removeStorageItem('user')
+    removeStorageItem('isAuthenticated')
+    removeStorageItem('token')
+
+    // 홈 화면으로 리다이렉트
+    navigate('/')
   }
 
   return (

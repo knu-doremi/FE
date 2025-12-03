@@ -14,18 +14,117 @@ export interface ApiError {
   errors?: Record<string, string[]>
 }
 
+// ===== 인증 관련 타입 =====
+
+// 로그인 요청
+export interface LoginRequest {
+  userid: string
+  password: string
+}
+
+// 로그인 응답 - 사용자 정보
+export interface LoginUser {
+  USER_ID: string
+  PASSWORD: string
+  NAME: string
+  SEX: 'M' | 'F'
+  BIRTHSTR: string // YYYYMMDD 형식
+}
+
+// 로그인 응답
+export interface LoginResponse {
+  result: boolean
+  user?: LoginUser
+  message?: string
+}
+
+// 회원가입 요청
+export interface RegisterRequest {
+  userid: string
+  password: string
+  name: string
+  sex: 'M' | 'F'
+  birthdate: string // YYYYMMDD 형식
+}
+
+// 회원가입 응답
+export interface RegisterResponse {
+  result: boolean
+  message?: string
+}
+
+// 아이디 중복확인 요청 (Query Parameter)
+export interface CheckIdRequest {
+  userid: string
+}
+
+// 아이디 중복확인 응답
+export interface CheckIdResponse {
+  result: boolean
+  count: number
+  message: string
+}
+
+// 비밀번호 찾기 요청
+export interface SearchPasswordRequest {
+  username: string
+  userid: string
+  sex: 'M' | 'F'
+  birthdate: string // YYYYMMDD 형식
+}
+
+// 비밀번호 찾기 응답
+export interface SearchPasswordResponse {
+  result: boolean
+  password?: string
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {
+    // 네트워크 에러 (서버에 연결할 수 없는 경우)
+    if (!error.response) {
+      return {
+        message: '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.',
+        status: undefined,
+      }
+    }
+
+    // HTTP 에러 응답
+    const status = error.response.status
+    let message = error.response?.data?.message || error.message
+
+    // 상태 코드에 따른 기본 메시지
+    if (!message) {
+      switch (status) {
+        case 400:
+          message = '잘못된 요청입니다.'
+          break
+        case 401:
+          message = '인증이 필요합니다.'
+          break
+        case 403:
+          message = '접근 권한이 없습니다.'
+          break
+        case 404:
+          message = '요청한 리소스를 찾을 수 없습니다.'
+          break
+        case 500:
+          message = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+          break
+        default:
+          message = '알 수 없는 오류가 발생했습니다.'
+      }
+    }
+
     return {
-      message:
-        error.response?.data?.message ||
-        error.message ||
-        '알 수 없는 오류가 발생했습니다.',
-      status: error.response?.status,
+      message,
+      status,
       errors: error.response?.data?.errors,
     }
   }
+
   return {
     message:
       error instanceof Error

@@ -15,6 +15,9 @@ import {
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
 } from '../utils/validation'
+import { searchPassword } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/types'
+import { formatDateToYYYYMMDD, formatGenderToAPI } from '@/lib/utils/format'
 
 interface ForgotPasswordFormProps {
   onSuccessChange?: (isSuccess: boolean) => void
@@ -31,20 +34,44 @@ function ForgotPasswordForm({ onSuccessChange }: ForgotPasswordFormProps) {
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [isSuccess, setIsSuccess] = useState(false)
   const [foundPassword, setFoundPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [apiError, setApiError] = useState<string>('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validateForgotPasswordForm(formData)
     setErrors(validationErrors)
+    setApiError('')
 
     if (Object.keys(validationErrors).length === 0) {
-      // TODO: API 연동
-      // 임시로 비밀번호를 반환하는 것으로 시뮬레이션
-      // 실제로는 API에서 받아온 비밀번호를 표시
-      const mockPassword = '******' // 실제로는 API 응답에서 받아옴
-      setFoundPassword(mockPassword)
-      setIsSuccess(true)
-      onSuccessChange?.(true)
+      setIsLoading(true)
+      try {
+        // 데이터 형식 변환
+        const searchData = {
+          username: formData.name,
+          userid: formData.userId,
+          sex: formatGenderToAPI(formData.gender),
+          birthdate: formatDateToYYYYMMDD(formData.birthDate),
+        }
+
+        const response = await searchPassword(searchData)
+
+        if (response.result && response.password) {
+          setFoundPassword(response.password)
+          setIsSuccess(true)
+          onSuccessChange?.(true)
+        } else {
+          setApiError(
+            response.message ||
+              '비밀번호를 찾을 수 없습니다. 정보를 확인해주세요.'
+          )
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setApiError(apiError.message || '비밀번호 찾기 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -263,20 +290,31 @@ function ForgotPasswordForm({ onSuccessChange }: ForgotPasswordFormProps) {
         <FormErrorMessage message={errors.birthDate} />
       </div>
 
+      {apiError && (
+        <div className="rounded-md bg-red-50 p-3">
+          <p className="text-sm text-red-600">{apiError}</p>
+        </div>
+      )}
+
       <Button
         type="submit"
-        className="w-full text-white"
+        className="w-full cursor-pointer text-white"
+        disabled={isLoading}
         style={{
-          backgroundColor: '#B9BDDE',
+          backgroundColor: isLoading ? '#9CA3AF' : '#B9BDDE',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.backgroundColor = '#A5A9D0'
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = '#A5A9D0'
+          }
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.backgroundColor = '#B9BDDE'
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = '#B9BDDE'
+          }
         }}
       >
-        비밀번호 찾기
+        {isLoading ? '찾는 중...' : '비밀번호 찾기'}
       </Button>
 
       <div className="text-center text-sm">

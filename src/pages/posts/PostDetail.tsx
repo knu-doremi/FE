@@ -155,7 +155,6 @@ function PostDetail() {
                     className="cursor-pointer"
                     onClick={() => {
                       // TODO: 좋아요 토글 로직
-                      console.log('좋아요 클릭')
                     }}
                   >
                     <Heart

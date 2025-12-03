@@ -24,13 +24,11 @@ function PostCard({ post }: PostCardProps) {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     // TODO: 좋아요 토글 로직
-    console.log('좋아요 클릭', post.id)
   }
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     // TODO: 북마크 토글 로직
-    console.log('북마크 클릭', post.id)
   }
 
   const handleCommentClick = (e: React.MouseEvent) => {
