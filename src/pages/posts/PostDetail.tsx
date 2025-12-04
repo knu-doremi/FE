@@ -1,11 +1,19 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Heart, ArrowLeft, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { getComments } from '@/lib/api/comments'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem } from '@/lib/utils/storage'
+import type { Comment } from '@/lib/api/types'
 
 function PostDetail() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
+  const [comments, setComments] = useState<Comment[]>([])
+  const [isLoadingComments, setIsLoadingComments] = useState(false)
+  const [commentsError, setCommentsError] = useState<string>('')
 
   // TODO: 실제 게시물 데이터로 교체
   const postData = {
@@ -18,27 +26,34 @@ function PostDetail() {
     content: '게시물 내용입니다. 이곳에 게시물의 본문이 표시됩니다.',
     hashtags: ['대박', '히히'],
     likes: 123,
-    comments: [
-      {
-        id: 1,
-        author: {
-          name: '댓글 작성자1',
-          userId: 'commenter1',
-        },
-        content: '정말 멋진 게시물이네요!',
-        createdAt: '2024-01-01',
-      },
-      {
-        id: 2,
-        author: {
-          name: '댓글 작성자2',
-          userId: 'commenter2',
-        },
-        content: '좋아요!',
-        createdAt: '2024-01-02',
-      },
-    ],
   }
+
+  // 댓글 목록 조회
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!postId) return
+
+      setIsLoadingComments(true)
+      setCommentsError('')
+      try {
+        const response = await getComments(parseInt(postId))
+        if (response.result && response.comments) {
+          setComments(response.comments)
+        } else {
+          setCommentsError('댓글을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setCommentsError(
+          apiError.message || '댓글을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        setIsLoadingComments(false)
+      }
+    }
+
+    fetchComments()
+  }, [postId])
 
   return (
     <div className="min-h-screen bg-gray-50">
