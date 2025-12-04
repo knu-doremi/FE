@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Heart, ArrowLeft, User } from 'lucide-react'
+import { Heart, ArrowLeft, User, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { getComments, createComment, createReply } from '@/lib/api/comments'
+import {
+  getComments,
+  createComment,
+  createReply,
+  deleteComment,
+} from '@/lib/api/comments'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import type { Comment, LoginUser } from '@/lib/api/types'
@@ -27,6 +32,10 @@ function PostDetail() {
     Record<number, boolean>
   >({})
   const [replyErrors, setReplyErrors] = useState<Record<number, string>>({})
+  const [isDeletingComment, setIsDeletingComment] = useState<
+    Record<number, boolean>
+  >({})
+  const [deleteErrors, setDeleteErrors] = useState<Record<number, string>>({})
 
   // TODO: 실제 게시물 데이터로 교체
   const postData = {
@@ -175,6 +184,34 @@ function PostDetail() {
       if (!replyTexts[commentId]) {
         setReplyTexts(prev => ({ ...prev, [commentId]: '' }))
       }
+    }
+  }
+
+  // 댓글 삭제
+  const handleDeleteComment = async (commentId: number) => {
+    if (!window.confirm('댓글을 삭제하시겠습니까?')) return
+
+    setIsDeletingComment(prev => ({ ...prev, [commentId]: true }))
+    setDeleteErrors(prev => ({ ...prev, [commentId]: '' }))
+    try {
+      const response = await deleteComment(commentId)
+      if (response.result) {
+        // 댓글 목록 새로고침
+        await fetchComments()
+      } else {
+        setDeleteErrors(prev => ({
+          ...prev,
+          [commentId]: response.message || '댓글 삭제에 실패했습니다.',
+        }))
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      setDeleteErrors(prev => ({
+        ...prev,
+        [commentId]: apiError.message || '댓글 삭제 중 오류가 발생했습니다.',
+      }))
+    } finally {
+      setIsDeletingComment(prev => ({ ...prev, [commentId]: false }))
     }
   }
 
@@ -382,36 +419,64 @@ function PostDetail() {
                     key={comment.COMMENT_ID}
                     className="border-b border-gray-200 pb-4 last:border-b-0"
                   >
-                    <div className="mb-2 flex items-center gap-3">
-                      <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full"
-                        style={{
-                          backgroundColor: 'rgba(185, 189, 222, 0.2)',
-                        }}
-                      >
-                        <User
-                          size={16}
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-8 w-8 items-center justify-center rounded-full"
                           style={{
-                            color: '#B9BDDE',
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {comment.USER_ID}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{
-                            color: '#9CA3AF',
+                            backgroundColor: 'rgba(185, 189, 222, 0.2)',
                           }}
                         >
-                          {new Date(comment.CREATED_AT).toLocaleDateString(
-                            'ko-KR'
-                          )}
-                        </p>
+                          <User
+                            size={16}
+                            style={{
+                              color: '#B9BDDE',
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {comment.USER_ID}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {new Date(comment.CREATED_AT).toLocaleDateString(
+                              'ko-KR'
+                            )}
+                          </p>
+                        </div>
                       </div>
+                      {/* 삭제 버튼 (본인 댓글만 표시) */}
+                      {currentUser &&
+                        comment.USER_ID === currentUser.USER_ID && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleDeleteComment(comment.COMMENT_ID)
+                            }
+                            disabled={
+                              isDeletingComment[comment.COMMENT_ID] || false
+                            }
+                            className="h-8 w-8 cursor-pointer"
+                            style={{
+                              color: '#EF4444',
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        )}
                     </div>
+                    {deleteErrors[comment.COMMENT_ID] && (
+                      <p className="mb-2 text-sm text-red-600">
+                        {deleteErrors[comment.COMMENT_ID]}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-700">{comment.TEXT}</p>
 
                     {/* 답글 버튼 및 입력 폼 */}
@@ -515,36 +580,65 @@ function PostDetail() {
                       <div className="ml-4 mt-3 space-y-3 border-l-2 border-gray-200 pl-4">
                         {comment.replies.map(reply => (
                           <div key={reply.COMMENT_ID}>
-                            <div className="mb-1 flex items-center gap-2">
-                              <div
-                                className="flex h-6 w-6 items-center justify-center rounded-full"
-                                style={{
-                                  backgroundColor: 'rgba(185, 189, 222, 0.2)',
-                                }}
-                              >
-                                <User
-                                  size={12}
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="flex h-6 w-6 items-center justify-center rounded-full"
                                   style={{
-                                    color: '#B9BDDE',
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-gray-900">
-                                  {reply.USER_ID}
-                                </p>
-                                <p
-                                  className="text-xs"
-                                  style={{
-                                    color: '#9CA3AF',
+                                    backgroundColor: 'rgba(185, 189, 222, 0.2)',
                                   }}
                                 >
-                                  {new Date(
-                                    reply.CREATED_AT
-                                  ).toLocaleDateString('ko-KR')}
-                                </p>
+                                  <User
+                                    size={12}
+                                    style={{
+                                      color: '#B9BDDE',
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-900">
+                                    {reply.USER_ID}
+                                  </p>
+                                  <p
+                                    className="text-xs"
+                                    style={{
+                                      color: '#9CA3AF',
+                                    }}
+                                  >
+                                    {new Date(
+                                      reply.CREATED_AT
+                                    ).toLocaleDateString('ko-KR')}
+                                  </p>
+                                </div>
                               </div>
+                              {/* 답글 삭제 버튼 (본인 답글만 표시) */}
+                              {currentUser &&
+                                reply.USER_ID === currentUser.USER_ID && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleDeleteComment(reply.COMMENT_ID)
+                                    }
+                                    disabled={
+                                      isDeletingComment[reply.COMMENT_ID] ||
+                                      false
+                                    }
+                                    className="h-6 w-6 cursor-pointer"
+                                    style={{
+                                      color: '#EF4444',
+                                    }}
+                                  >
+                                    <Trash2 size={12} />
+                                  </Button>
+                                )}
                             </div>
+                            {deleteErrors[reply.COMMENT_ID] && (
+                              <p className="mb-1 text-xs text-red-600">
+                                {deleteErrors[reply.COMMENT_ID]}
+                              </p>
+                            )}
                             <p className="text-xs text-gray-700">
                               {reply.TEXT}
                             </p>
