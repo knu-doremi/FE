@@ -4,7 +4,7 @@ import { Heart, ArrowLeft, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { getComments, createComment } from '@/lib/api/comments'
+import { getComments, createComment, createReply } from '@/lib/api/comments'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import type { Comment, LoginUser } from '@/lib/api/types'
@@ -19,6 +19,14 @@ function PostDetail() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [commentSubmitError, setCommentSubmitError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(
+    null
+  )
+  const [replyTexts, setReplyTexts] = useState<Record<number, string>>({})
+  const [isSubmittingReply, setIsSubmittingReply] = useState<
+    Record<number, boolean>
+  >({})
+  const [replyErrors, setReplyErrors] = useState<Record<number, string>>({})
 
   // TODO: 실제 게시물 데이터로 교체
   const postData = {
@@ -101,6 +109,72 @@ function PostDetail() {
       )
     } finally {
       setIsSubmittingComment(false)
+    }
+  }
+
+  // 답글 작성
+  const handleSubmitReply = async (
+    e: React.FormEvent,
+    parentCommentId: number
+  ) => {
+    e.preventDefault()
+    if (!currentUser || !replyTexts[parentCommentId]?.trim()) return
+
+    setIsSubmittingReply(prev => ({ ...prev, [parentCommentId]: true }))
+    setReplyErrors(prev => ({ ...prev, [parentCommentId]: '' }))
+    try {
+      const response = await createReply({
+        PARENT_COMMENT_ID: parentCommentId,
+        USER_ID: currentUser.USER_ID,
+        TEXT: replyTexts[parentCommentId].trim(),
+      })
+
+      if (response.result) {
+        setReplyTexts(prev => {
+          const newReplyTexts = { ...prev }
+          delete newReplyTexts[parentCommentId]
+          return newReplyTexts
+        })
+        setReplyingToCommentId(null)
+        // 댓글 목록 새로고침
+        await fetchComments()
+      } else {
+        setReplyErrors(prev => ({
+          ...prev,
+          [parentCommentId]: response.message || '답글 작성에 실패했습니다.',
+        }))
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      setReplyErrors(prev => ({
+        ...prev,
+        [parentCommentId]:
+          apiError.message || '답글 작성 중 오류가 발생했습니다.',
+      }))
+    } finally {
+      setIsSubmittingReply(prev => ({ ...prev, [parentCommentId]: false }))
+    }
+  }
+
+  // 답글 입력 필드 토글
+  const toggleReplyInput = (commentId: number) => {
+    if (replyingToCommentId === commentId) {
+      setReplyingToCommentId(null)
+      setReplyTexts(prev => {
+        const newReplyTexts = { ...prev }
+        delete newReplyTexts[commentId]
+        return newReplyTexts
+      })
+      setReplyErrors(prev => {
+        const newReplyErrors = { ...prev }
+        delete newReplyErrors[commentId]
+        return newReplyErrors
+      })
+    } else {
+      setReplyingToCommentId(commentId)
+      if (!replyTexts[commentId]) {
+        setReplyTexts(prev => ({ ...prev, [commentId]: '' }))
+      }
     }
   }
 
@@ -339,6 +413,103 @@ function PostDetail() {
                       </div>
                     </div>
                     <p className="text-sm text-gray-700">{comment.TEXT}</p>
+
+                    {/* 답글 버튼 및 입력 폼 */}
+                    {currentUser && (
+                      <div className="mt-2">
+                        {replyingToCommentId === comment.COMMENT_ID ? (
+                          <form
+                            onSubmit={e =>
+                              handleSubmitReply(e, comment.COMMENT_ID)
+                            }
+                            className="mt-2"
+                          >
+                            <div className="flex gap-2">
+                              <Input
+                                type="text"
+                                placeholder="답글을 입력하세요..."
+                                value={replyTexts[comment.COMMENT_ID] || ''}
+                                onChange={e =>
+                                  setReplyTexts(prev => ({
+                                    ...prev,
+                                    [comment.COMMENT_ID]: e.target.value,
+                                  }))
+                                }
+                                className="flex-1"
+                                disabled={
+                                  isSubmittingReply[comment.COMMENT_ID] || false
+                                }
+                              />
+                              <Button
+                                type="submit"
+                                disabled={
+                                  isSubmittingReply[comment.COMMENT_ID] ||
+                                  !replyTexts[comment.COMMENT_ID]?.trim()
+                                }
+                                className="cursor-pointer whitespace-nowrap text-white"
+                                style={{
+                                  backgroundColor: '#B9BDDE',
+                                }}
+                                onMouseEnter={e => {
+                                  if (
+                                    !isSubmittingReply[comment.COMMENT_ID] &&
+                                    replyTexts[comment.COMMENT_ID]?.trim()
+                                  ) {
+                                    e.currentTarget.style.backgroundColor =
+                                      '#A5A9D0'
+                                  }
+                                }}
+                                onMouseLeave={e => {
+                                  if (
+                                    !isSubmittingReply[comment.COMMENT_ID] &&
+                                    replyTexts[comment.COMMENT_ID]?.trim()
+                                  ) {
+                                    e.currentTarget.style.backgroundColor =
+                                      '#B9BDDE'
+                                  }
+                                }}
+                              >
+                                {isSubmittingReply[comment.COMMENT_ID]
+                                  ? '작성 중...'
+                                  : '작성'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  toggleReplyInput(comment.COMMENT_ID)
+                                }
+                                className="cursor-pointer"
+                                disabled={
+                                  isSubmittingReply[comment.COMMENT_ID] || false
+                                }
+                              >
+                                취소
+                              </Button>
+                            </div>
+                            {replyErrors[comment.COMMENT_ID] && (
+                              <p className="mt-2 text-sm text-red-600">
+                                {replyErrors[comment.COMMENT_ID]}
+                              </p>
+                            )}
+                          </form>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleReplyInput(comment.COMMENT_ID)}
+                            className="cursor-pointer text-xs"
+                            style={{
+                              color: '#7C7FA8',
+                            }}
+                          >
+                            답글
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
                     {/* 답글 표시 */}
                     {comment.replies && comment.replies.length > 0 && (
                       <div className="ml-4 mt-3 space-y-3 border-l-2 border-gray-200 pl-4">
