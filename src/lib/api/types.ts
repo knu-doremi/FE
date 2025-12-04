@@ -80,6 +80,58 @@ export interface SearchPasswordResponse {
   message?: string
 }
 
+// ===== 댓글 관련 타입 =====
+
+// 댓글 객체
+export interface Comment {
+  COMMENT_ID: number
+  PARENT_COMMENT_ID: number | null
+  CREATED_AT: string // ISO 8601 형식
+  POST_ID: number
+  USER_ID: string
+  TEXT: string
+  replies?: Comment[] // 답글 배열 (부모 댓글인 경우에만 존재)
+}
+
+// 댓글 목록 조회 응답
+export interface GetCommentsResponse {
+  result: boolean
+  comments: Comment[]
+  message?: string
+}
+
+// 댓글 작성 요청
+export interface CreateCommentRequest {
+  POST_ID: number
+  USER_ID: string
+  TEXT: string
+}
+
+// 댓글 작성 응답
+export interface CreateCommentResponse {
+  result: boolean
+  message?: string
+}
+
+// 답글 작성 요청
+export interface CreateReplyRequest {
+  PARENT_COMMENT_ID: number
+  USER_ID: string
+  TEXT: string
+}
+
+// 답글 작성 응답
+export interface CreateReplyResponse {
+  result: boolean
+  message?: string
+}
+
+// 댓글 삭제 응답
+export interface DeleteCommentResponse {
+  result: boolean
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {
