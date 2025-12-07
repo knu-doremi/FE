@@ -10,7 +10,7 @@ import {
   createReply,
   deleteComment,
 } from '@/lib/api/comments'
-import { getPost } from '@/lib/api/posts'
+import { getPost, deletePost } from '@/lib/api/posts'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -41,6 +41,8 @@ function PostDetail() {
   const [post, setPost] = useState<Post | null>(null)
   const [isLoadingPost, setIsLoadingPost] = useState(false)
   const [postError, setPostError] = useState<string>('')
+  const [isDeletingPost, setIsDeletingPost] = useState(false)
+  const [deletePostError, setDeletePostError] = useState<string>('')
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -261,19 +263,63 @@ function PostDetail() {
     }
   }
 
+  // 게시물 삭제
+  const handleDeletePost = async () => {
+    if (!post || !currentUser || !postId) return
+    if (!window.confirm('게시물을 삭제하시겠습니까?')) return
+
+    setIsDeletingPost(true)
+    setDeletePostError('')
+    try {
+      const response = await deletePost(parseInt(postId), currentUser.USER_ID)
+      if (response.result) {
+        // 프로필 페이지로 리다이렉트
+        navigate('/profile')
+      } else {
+        setDeletePostError(response.message || '게시물 삭제에 실패했습니다.')
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      setDeletePostError(
+        apiError.message || '게시물 삭제 중 오류가 발생했습니다.'
+      )
+    } finally {
+      setIsDeletingPost(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="sticky top-0 z-50 flex items-center gap-4 border-b border-gray-200 bg-white px-4 py-3 lg:px-6 lg:py-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-          className="cursor-pointer"
-        >
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-lg font-semibold lg:text-xl">게시물</h1>
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:px-6 lg:py-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="cursor-pointer"
+          >
+            <ArrowLeft size={20} />
+          </Button>
+          <h1 className="text-lg font-semibold lg:text-xl">게시물</h1>
+        </div>
+        {/* 게시물 삭제 버튼 (본인 게시물만 표시) */}
+        {post &&
+          currentUser &&
+          post.userId === currentUser.USER_ID &&
+          !isDeletingPost && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDeletePost}
+              className="cursor-pointer"
+              style={{
+                color: '#EF4444',
+              }}
+            >
+              <Trash2 size={20} />
+            </Button>
+          )}
       </header>
 
       {/* 메인 컨텐츠 */}
@@ -397,6 +443,13 @@ function PostDetail() {
                     </span>
                   </div>
                 </div>
+
+                {/* 게시물 삭제 에러 메시지 */}
+                {deletePostError && (
+                  <div className="rounded-md bg-red-50 p-3">
+                    <p className="text-sm text-red-600">{deletePostError}</p>
+                  </div>
+                )}
               </div>
             </div>
 

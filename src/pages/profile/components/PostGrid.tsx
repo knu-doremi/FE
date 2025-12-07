@@ -29,13 +29,11 @@ function PostGrid({
           image: post.image,
         })),
       ]
-    : posts
-        .slice(0, 9)
-        .map(post => ({
-          type: 'post' as const,
-          id: post.id,
-          image: post.image,
-        }))
+    : posts.slice(0, 9).map(post => ({
+        type: 'post' as const,
+        id: post.id,
+        image: post.image,
+      }))
 
   return (
     <div className="grid grid-cols-3 gap-1 py-4 lg:gap-2 lg:py-6">
