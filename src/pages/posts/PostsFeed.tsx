@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import PostsFeedHeader from './components/PostsFeedHeader'
 import PostList from './components/PostList'
-import { getRecommendedPosts } from '@/lib/api/posts'
+import { getRecommendedPosts, getFollowingPosts } from '@/lib/api/posts'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -31,6 +31,9 @@ function PostsFeed() {
   const [recommendedPosts, setRecommendedPosts] = useState<PostCardData[]>([])
   const [isLoadingRecommended, setIsLoadingRecommended] = useState(false)
   const [recommendedError, setRecommendedError] = useState<string>('')
+  const [followingPosts, setFollowingPosts] = useState<PostCardData[]>([])
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState(false)
+  const [followingError, setFollowingError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -92,8 +95,51 @@ function PostsFeed() {
     }
   }, [activeTab, currentUser])
 
-  // TODO: 팔로잉 게시물은 다음 단계에서 구현
-  const followingPosts: PostCardData[] = []
+  // 팔로잉 게시물 조회
+  useEffect(() => {
+    const fetchFollowingPosts = async () => {
+      if (!currentUser) return
+
+      setIsLoadingFollowing(true)
+      setFollowingError('')
+      try {
+        const response = await getFollowingPosts(currentUser.USER_ID)
+        if (response.result && response.posts) {
+          // API 응답을 PostCard 형식으로 변환
+          const transformedPosts: PostCardData[] = response.posts.map(
+            (post: Post) => ({
+              id: post.postId,
+              author: {
+                name: post.userId, // API에 name이 없으므로 userId 사용
+                userId: post.userId,
+              },
+              image: getImageUrl(post.imageDir),
+              content: post.content,
+              hashtags: [], // API 응답에 해시태그 정보가 없으면 빈 배열
+              likes: post.likeCount || 0,
+              comments: 0, // API 응답에 댓글 수가 없으면 0
+              isLiked: false,
+              isBookmarked: false,
+            })
+          )
+          setFollowingPosts(transformedPosts)
+        } else {
+          setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setFollowingError(
+          apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        setIsLoadingFollowing(false)
+      }
+    }
+
+    if (activeTab === 'following' && currentUser) {
+      fetchFollowingPosts()
+    }
+  }, [activeTab, currentUser])
 
   // 검색어에 따라 게시물 필터링
   const filterPostsByHashtag = (
@@ -138,6 +184,23 @@ function PostsFeed() {
           <div className="py-12 text-center">
             <p className="text-sm text-red-600 lg:text-base">
               {recommendedError}
+            </p>
+          </div>
+        ) : activeTab === 'following' && isLoadingFollowing ? (
+          <div className="py-12 text-center">
+            <p
+              className="text-sm lg:text-base"
+              style={{
+                color: '#9CA3AF',
+              }}
+            >
+              팔로잉 게시물을 불러오는 중...
+            </p>
+          </div>
+        ) : activeTab === 'following' && followingError ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-red-600 lg:text-base">
+              {followingError}
             </p>
           </div>
         ) : (
