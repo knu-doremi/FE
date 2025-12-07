@@ -55,3 +55,37 @@ export function formatGenderToAPI(gender: string): 'M' | 'F' {
 export function formatGenderFromAPI(gender: string): 'male' | 'female' {
   return gender === 'M' ? 'male' : 'female'
 }
+
+/**
+ * 이미지 URL 처리 유틸 함수
+ */
+
+/**
+ * imageDir을 백엔드 IP 주소와 결합하여 완전한 이미지 URL 생성
+ * @param imageDir - 백엔드에서 받은 이미지 경로 (예: "/uploads/파일명.jpg")
+ * @returns 완전한 이미지 URL (예: "http://localhost:3000/uploads/파일명.jpg")
+ * @example
+ * getImageUrl('/uploads/cat.jpg') // 'http://localhost:3000/uploads/cat.jpg'
+ */
+export function getImageUrl(imageDir?: string): string {
+  if (!imageDir) {
+    return ''
+  }
+
+  // 이미 완전한 URL인 경우 그대로 반환
+  if (imageDir.startsWith('http://') || imageDir.startsWith('https://')) {
+    return imageDir
+  }
+
+  // 백엔드 기본 URL
+  // 개발 환경: 프록시를 통해 접근하므로 상대 경로 사용
+  // 프로덕션: 환경 변수 또는 기본값 사용
+  const backendBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+  // imageDir이 /로 시작하지 않으면 추가
+  const normalizedPath = imageDir.startsWith('/') ? imageDir : `/${imageDir}`
+
+  // 백엔드 URL과 imageDir 결합
+  return `${backendBaseUrl}${normalizedPath}`
+}
