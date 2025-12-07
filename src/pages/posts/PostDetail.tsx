@@ -84,33 +84,6 @@ function PostDetail() {
     fetchPost()
   }, [postId])
 
-  // 게시물 상세 조회
-  useEffect(() => {
-    const fetchPost = async () => {
-      if (!postId) return
-
-      setIsLoadingPost(true)
-      setPostError('')
-      try {
-        const response = await getPost(parseInt(postId))
-        if (response.result && response.post) {
-          setPost(response.post)
-        } else {
-          setPostError('게시물을 불러올 수 없습니다.')
-        }
-      } catch (error) {
-        const apiError = handleApiError(error)
-        setPostError(
-          apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
-        )
-      } finally {
-        setIsLoadingPost(false)
-      }
-    }
-
-    fetchPost()
-  }, [postId])
-
   // 댓글 목록 조회
   const fetchComments = async () => {
     if (!postId) return
@@ -304,22 +277,24 @@ function PostDetail() {
           <h1 className="text-lg font-semibold lg:text-xl">게시물</h1>
         </div>
         {/* 게시물 삭제 버튼 (본인 게시물만 표시) */}
-        {post &&
-          currentUser &&
-          post.userId === currentUser.USER_ID &&
-          !isDeletingPost && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDeletePost}
-              className="cursor-pointer"
-              style={{
-                color: '#EF4444',
-              }}
-            >
+        {post && currentUser && post.userId === currentUser.USER_ID && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDeletePost}
+            disabled={isDeletingPost}
+            className="cursor-pointer"
+            style={{
+              color: '#EF4444',
+            }}
+          >
+            {isDeletingPost ? (
+              <span className="text-sm">삭제 중...</span>
+            ) : (
               <Trash2 size={20} />
-            </Button>
-          )}
+            )}
+          </Button>
+        )}
       </header>
 
       {/* 메인 컨텐츠 */}
