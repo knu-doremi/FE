@@ -3,6 +3,7 @@ import BottomNavigation from '../profile/components/BottomNavigation'
 import PostsFeedHeader from './components/PostsFeedHeader'
 import PostList from './components/PostList'
 import { getRecommendedPosts, getFollowingPosts } from '@/lib/api/posts'
+import { searchPostsByHashtag } from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -35,6 +36,11 @@ function PostsFeed() {
   const [isLoadingFollowing, setIsLoadingFollowing] = useState(false)
   const [followingError, setFollowingError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [hashtagSearchResults, setHashtagSearchResults] = useState<
+    PostCardData[]
+  >([])
+  const [isLoadingHashtagSearch, setIsLoadingHashtagSearch] = useState(false)
+  const [hashtagSearchError, setHashtagSearchError] = useState<string>('')
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -155,24 +161,80 @@ function PostsFeed() {
     }
   }, [activeTab, currentUser])
 
-  // 검색어에 따라 게시물 필터링
-  const filterPostsByHashtag = (
-    posts: PostCardData[],
-    query: string
-  ): PostCardData[] => {
-    if (!query.trim()) return posts
+  // 해시태그 검색 API 호출
+  useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null
 
-    const searchTerm = query.trim().toLowerCase().replace(/^#/, '') // # 제거
+    const fetchHashtagSearch = async () => {
+      const trimmedQuery = searchQuery.trim().replace(/^#/, '') // # 제거
+      if (!trimmedQuery) {
+        setHashtagSearchResults([])
+        setHashtagSearchError('')
+        return
+      }
 
-    return posts.filter(post => {
-      if (!post.hashtags || post.hashtags.length === 0) return false
-      return post.hashtags.some(tag => tag.toLowerCase().includes(searchTerm))
-    })
-  }
+      setIsLoadingHashtagSearch(true)
+      setHashtagSearchError('')
+      try {
+        const response = await searchPostsByHashtag(trimmedQuery)
+        if (response.result && response.posts) {
+          // API 응답을 PostCard 형식으로 변환
+          const transformedPosts: PostCardData[] = response.posts.map(
+            (post: Post) => {
+              const hashtags = post.hashtags
+                ? post.hashtags.map(tag => tag.hashtagName)
+                : []
 
-  const allPosts =
-    activeTab === 'recommended' ? recommendedPosts : followingPosts
-  const filteredPosts = filterPostsByHashtag(allPosts, searchQuery)
+              return {
+                id: post.postId,
+                author: {
+                  name: post.username || post.userId,
+                  userId: post.userId,
+                },
+                image: getImageUrl(post.imageDir),
+                content: post.content,
+                hashtags,
+                likes: post.likeCount || 0,
+                comments: post.commentCount || 0,
+                isLiked: false,
+                isBookmarked: false,
+              }
+            }
+          )
+          setHashtagSearchResults(transformedPosts)
+        } else {
+          setHashtagSearchError('검색 결과를 불러올 수 없습니다.')
+          setHashtagSearchResults([])
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setHashtagSearchError(
+          apiError.message || '해시태그 검색 중 오류가 발생했습니다.'
+        )
+        setHashtagSearchResults([])
+      } finally {
+        setIsLoadingHashtagSearch(false)
+      }
+    }
+
+    // 디바운싱: 500ms 후에 API 호출
+    debounceTimer = setTimeout(() => {
+      fetchHashtagSearch()
+    }, 500)
+
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+    }
+  }, [searchQuery])
+
+  // 표시할 게시물 결정: 검색어가 있으면 검색 결과, 없으면 기존 게시물 목록
+  const displayPosts = searchQuery.trim()
+    ? hashtagSearchResults
+    : activeTab === 'recommended'
+      ? recommendedPosts
+      : followingPosts
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 pt-36 lg:pb-20 lg:pt-44">
@@ -183,7 +245,38 @@ function PostsFeed() {
         onSearchChange={setSearchQuery}
       />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
-        {activeTab === 'recommended' && isLoadingRecommended ? (
+        {/* 검색 중일 때 */}
+        {searchQuery.trim() && isLoadingHashtagSearch ? (
+          <div className="py-12 text-center">
+            <p
+              className="text-sm lg:text-base"
+              style={{
+                color: '#9CA3AF',
+              }}
+            >
+              검색 중...
+            </p>
+          </div>
+        ) : searchQuery.trim() && hashtagSearchError ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-red-600 lg:text-base">
+              {hashtagSearchError}
+            </p>
+          </div>
+        ) : searchQuery.trim() && hashtagSearchResults.length === 0 ? (
+          <div className="py-12 text-center">
+            <p
+              className="text-sm lg:text-base"
+              style={{
+                color: '#9CA3AF',
+              }}
+            >
+              검색 결과가 없습니다.
+            </p>
+          </div>
+        ) : searchQuery.trim() ? (
+          <PostList posts={displayPosts} />
+        ) : activeTab === 'recommended' && isLoadingRecommended ? (
           <div className="py-12 text-center">
             <p
               className="text-sm lg:text-base"
@@ -218,7 +311,7 @@ function PostsFeed() {
             </p>
           </div>
         ) : (
-          <PostList posts={filteredPosts} />
+          <PostList posts={displayPosts} />
         )}
       </div>
       <BottomNavigation />
