@@ -76,13 +76,19 @@ function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* 게시물 이미지 */}
-      <div className="w-full overflow-hidden bg-gray-200">
-        <img
-          src={post.image}
-          alt="게시물 이미지"
-          className="h-auto w-full object-cover"
-        />
-      </div>
+      {post.image && (
+        <div className="w-full overflow-hidden bg-gray-200">
+          <img
+            src={post.image}
+            alt="게시물 이미지"
+            className="h-auto w-full object-cover"
+            onError={e => {
+              // 이미지 로드 실패 시 숨김
+              e.currentTarget.style.display = 'none'
+            }}
+          />
+        </div>
+      )}
 
       {/* 게시물 내용 */}
       <div className="px-4 py-3 lg:px-6 lg:py-4">
