@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import ProfileHeader from './components/ProfileHeader'
 import ProfileInfo from './components/ProfileInfo'
 import ProfileStats from './components/ProfileStats'
@@ -14,6 +14,7 @@ import type { LoginUser, Post } from '@/lib/api/types'
 
 function Profile() {
   const { userId: urlUserId } = useParams<{ userId?: string }>()
+  const location = useLocation()
   const isOwnProfile = !urlUserId
 
   const [isFollowing, setIsFollowing] = useState(false)
@@ -46,9 +47,12 @@ function Profile() {
       setPostsError('')
       try {
         const response = await getPostsByUser(targetUserId)
+        console.log('[Profile] API 응답:', response)
         if (response.result && response.posts) {
+          console.log('[Profile] 게시물 개수:', response.posts.length)
           setPosts(response.posts)
         } else {
+          console.log('[Profile] API 응답 실패:', response.message)
           setPostsError('게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
@@ -65,7 +69,7 @@ function Profile() {
     if (urlUserId || currentUser) {
       fetchPosts()
     }
-  }, [urlUserId, currentUser])
+  }, [urlUserId, currentUser, location.pathname])
 
   // TODO: 실제 사용자 데이터로 교체
   const userData = {
@@ -83,10 +87,20 @@ function Profile() {
   }
 
   // PostGrid에 전달할 게시물 데이터 변환
-  const postGridData = posts.map(post => ({
-    id: post.postId,
-    image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
-  }))
+  const postGridData = posts.map(post => {
+    const imageUrl = post.imageDir ? getImageUrl(post.imageDir) : undefined
+    console.log(
+      '[Profile] post.imageDir:',
+      post.imageDir,
+      '-> imageUrl:',
+      imageUrl
+    )
+    return {
+      id: post.postId,
+      image: imageUrl,
+    }
+  })
+  console.log('[Profile] postGridData:', postGridData)
 
   const handleFollowToggle = () => {
     setIsFollowing(prev => !prev)

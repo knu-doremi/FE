@@ -77,14 +77,30 @@ export function getImageUrl(imageDir?: string): string {
     return imageDir
   }
 
-  // 백엔드 기본 URL
-  // 개발 환경: 프록시를 통해 접근하므로 상대 경로 사용
+  // imageDir이 /로 시작하지 않으면 추가
+  let normalizedPath = imageDir.startsWith('/') ? imageDir : `/${imageDir}`
+
+  // /api/uploads/... 형식이면 /api 제거 (이미지는 /uploads/...로 직접 접근)
+  if (normalizedPath.startsWith('/api/uploads/')) {
+    normalizedPath = normalizedPath.replace('/api', '')
+  }
+
+  // 개발 환경: Vite 프록시를 통해 접근 (상대 경로 사용)
+  // 프로덕션: 환경 변수 또는 기본값 사용
+  // import.meta.env.MODE를 사용하여 개발/프로덕션 구분
+  const isDevelopment = import.meta.env.MODE === 'development'
+  
+  // 개발 환경에서는 항상 상대 경로 사용 (프록시를 통해)
+  if (isDevelopment) {
+    return normalizedPath
+  }
+
   // 프로덕션: 환경 변수 또는 기본값 사용
   const backendBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-
-  // imageDir이 /로 시작하지 않으면 추가
-  const normalizedPath = imageDir.startsWith('/') ? imageDir : `/${imageDir}`
+    import.meta.env.VITE_API_BASE_URL &&
+    import.meta.env.VITE_API_BASE_URL !== ''
+      ? import.meta.env.VITE_API_BASE_URL
+      : 'http://localhost:3000'
 
   // 백엔드 URL과 imageDir 결합
   return `${backendBaseUrl}${normalizedPath}`

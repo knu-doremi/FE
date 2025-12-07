@@ -23,13 +23,13 @@ function PostGrid({
   const displayItems = showAddButton
     ? [
         { type: 'add' as const },
-        ...posts.slice(0, 8).map(post => ({
+        ...posts.map(post => ({
           type: 'post' as const,
           id: post.id,
           image: post.image,
         })),
       ]
-    : posts.slice(0, 9).map(post => ({
+    : posts.map(post => ({
         type: 'post' as const,
         id: post.id,
         image: post.image,
@@ -57,7 +57,6 @@ function PostGrid({
 
         // showAddButton이 true일 때는 index에서 1을 빼서 게시물 번호 계산
         const postIndex = showAddButton ? index - 1 : index
-        const post = posts.find(p => p.id === item.id)
 
         return (
           <button
@@ -65,11 +64,15 @@ function PostGrid({
             onClick={() => navigate(`/posts/${item.id}`)}
             className="flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-200 transition-colors hover:bg-gray-300"
           >
-            {post?.image ? (
+            {item.image ? (
               <img
-                src={post.image}
+                src={item.image}
                 alt={`게시물 ${postIndex + 1}`}
                 className="h-full w-full object-cover"
+                onError={e => {
+                  console.error('[PostGrid] 이미지 로드 실패:', item.image)
+                  e.currentTarget.style.display = 'none'
+                }}
               />
             ) : (
               <span
