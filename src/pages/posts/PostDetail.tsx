@@ -386,7 +386,32 @@ function PostDetail() {
                 </div>
 
                 {/* 해시태그 */}
-                {/* TODO: API 응답에 해시태그 정보가 추가되면 표시 */}
+                {post.hashtags && post.hashtags.length > 0 && (
+                  <div className="space-y-2">
+                    <Label
+                      className="text-sm font-medium"
+                      style={{
+                        color: '#6B7280',
+                      }}
+                    >
+                      해시태그
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {post.hashtags.map(tag => (
+                        <span
+                          key={tag.hashtagId}
+                          className="rounded-md px-3 py-1 text-sm"
+                          style={{
+                            backgroundColor: 'rgba(185, 189, 222, 0.2)',
+                            color: '#7C7FA8',
+                          }}
+                        >
+                          #{tag.hashtagName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* 좋아요 */}
                 <div className="space-y-2">

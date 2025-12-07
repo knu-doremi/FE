@@ -140,6 +140,12 @@ export interface Hashtag {
   HASHTAG_NAME: string
 }
 
+// 게시물 해시태그 객체
+export interface PostHashtag {
+  hashtagId: number
+  hashtagName: string
+}
+
 // 게시물 객체
 export interface Post {
   postId: number
@@ -148,7 +154,9 @@ export interface Post {
   userId: string
   username?: string // 사용자 이름
   likeCount?: number
+  commentCount?: number // 댓글 수
   imageDir?: string // /uploads/... 형식
+  hashtags?: PostHashtag[] // 해시태그 배열
 }
 
 // 게시물 상세 조회 응답

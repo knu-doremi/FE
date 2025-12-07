@@ -61,20 +61,27 @@ function PostsFeed() {
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
-            (post: Post) => ({
-              id: post.postId,
-              author: {
-                name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
-                userId: post.userId,
-              },
-              image: getImageUrl(post.imageDir),
-              content: post.content,
-              hashtags: [], // API 응답에 해시태그 정보가 없으면 빈 배열
-              likes: post.likeCount || 0,
-              comments: 0, // API 응답에 댓글 수가 없으면 0
-              isLiked: false,
-              isBookmarked: false,
-            })
+            (post: Post) => {
+              // 해시태그 변환 (API 응답에 hashtags가 없을 수도 있음)
+              const hashtags = post.hashtags
+                ? post.hashtags.map(tag => tag.hashtagName)
+                : []
+
+              return {
+                id: post.postId,
+                author: {
+                  name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
+                  userId: post.userId,
+                },
+                image: getImageUrl(post.imageDir),
+                content: post.content,
+                hashtags, // 해시태그 배열
+                likes: post.likeCount || 0,
+                comments: post.commentCount || 0, // API 응답의 댓글 수 사용
+                isLiked: false,
+                isBookmarked: false,
+              }
+            }
           )
           setRecommendedPosts(transformedPosts)
         } else {
@@ -107,20 +114,27 @@ function PostsFeed() {
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
-            (post: Post) => ({
-              id: post.postId,
-              author: {
-                name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
-                userId: post.userId,
-              },
-              image: getImageUrl(post.imageDir),
-              content: post.content,
-              hashtags: [], // API 응답에 해시태그 정보가 없으면 빈 배열
-              likes: post.likeCount || 0,
-              comments: 0, // API 응답에 댓글 수가 없으면 0
-              isLiked: false,
-              isBookmarked: false,
-            })
+            (post: Post) => {
+              // 해시태그 변환 (API 응답에 hashtags가 없을 수도 있음)
+              const hashtags = post.hashtags
+                ? post.hashtags.map(tag => tag.hashtagName)
+                : []
+
+              return {
+                id: post.postId,
+                author: {
+                  name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
+                  userId: post.userId,
+                },
+                image: getImageUrl(post.imageDir),
+                content: post.content,
+                hashtags, // 해시태그 배열
+                likes: post.likeCount || 0,
+                comments: post.commentCount || 0, // API 응답의 댓글 수 사용
+                isLiked: false,
+                isBookmarked: false,
+              }
+            }
           )
           setFollowingPosts(transformedPosts)
         } else {
