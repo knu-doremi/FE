@@ -70,7 +70,6 @@ function PostGrid({
                 alt={`게시물 ${postIndex + 1}`}
                 className="h-full w-full object-cover"
                 onError={e => {
-                  console.error('[PostGrid] 이미지 로드 실패:', item.image)
                   e.currentTarget.style.display = 'none'
                 }}
               />

@@ -61,7 +61,7 @@ export interface CheckIdRequest {
 // 아이디 중복확인 응답
 export interface CheckIdResponse {
   result: boolean
-  count: number | null // null일 수 있음 (사용 가능한 경우)
+  count: number
   message: string
 }
 
@@ -146,6 +146,7 @@ export interface Post {
   content: string
   createdAt: string // ISO 8601 형식
   userId: string
+  username?: string // 사용자 이름
   likeCount?: number
   imageDir?: string // /uploads/... 형식
 }

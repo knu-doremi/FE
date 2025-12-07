@@ -64,7 +64,7 @@ function PostsFeed() {
             (post: Post) => ({
               id: post.postId,
               author: {
-                name: post.userId, // API에 name이 없으므로 userId 사용
+                name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
                 userId: post.userId,
               },
               image: getImageUrl(post.imageDir),
@@ -110,7 +110,7 @@ function PostsFeed() {
             (post: Post) => ({
               id: post.postId,
               author: {
-                name: post.userId, // API에 name이 없으므로 userId 사용
+                name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
                 userId: post.userId,
               },
               image: getImageUrl(post.imageDir),

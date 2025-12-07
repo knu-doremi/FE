@@ -89,7 +89,7 @@ export function getImageUrl(imageDir?: string): string {
   // 프로덕션: 환경 변수 또는 기본값 사용
   // import.meta.env.MODE를 사용하여 개발/프로덕션 구분
   const isDevelopment = import.meta.env.MODE === 'development'
-  
+
   // 개발 환경에서는 항상 상대 경로 사용 (프록시를 통해)
   if (isDevelopment) {
     return normalizedPath

@@ -358,7 +358,9 @@ function PostDetail() {
                     />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{post.userId}</p>
+                    <p className="font-semibold text-gray-900">
+                      {post.username || post.userId}
+                    </p>
                     <p
                       className="text-sm"
                       style={{

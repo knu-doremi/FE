@@ -38,6 +38,8 @@ function Profile() {
 
   // 사용자별 게시물 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchPosts = async () => {
       // 표시할 사용자 ID 결정 (urlUserId가 있으면 해당 사용자, 없으면 현재 로그인한 사용자)
       const targetUserId = urlUserId || currentUser?.USER_ID
@@ -47,27 +49,34 @@ function Profile() {
       setPostsError('')
       try {
         const response = await getPostsByUser(targetUserId)
-        console.log('[Profile] API 응답:', response)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.posts) {
-          console.log('[Profile] 게시물 개수:', response.posts.length)
           setPosts(response.posts)
         } else {
-          console.log('[Profile] API 응답 실패:', response.message)
           setPostsError('게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setPostsError(
           apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingPosts(false)
+        if (isMounted) {
+          setIsLoadingPosts(false)
+        }
       }
     }
 
     // urlUserId가 있거나 currentUser가 있을 때만 조회
     if (urlUserId || currentUser) {
       fetchPosts()
+    }
+
+    return () => {
+      isMounted = false
     }
   }, [urlUserId, currentUser, location.pathname])
 
@@ -87,20 +96,10 @@ function Profile() {
   }
 
   // PostGrid에 전달할 게시물 데이터 변환
-  const postGridData = posts.map(post => {
-    const imageUrl = post.imageDir ? getImageUrl(post.imageDir) : undefined
-    console.log(
-      '[Profile] post.imageDir:',
-      post.imageDir,
-      '-> imageUrl:',
-      imageUrl
-    )
-    return {
-      id: post.postId,
-      image: imageUrl,
-    }
-  })
-  console.log('[Profile] postGridData:', postGridData)
+  const postGridData = posts.map(post => ({
+    id: post.postId,
+    image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
+  }))
 
   const handleFollowToggle = () => {
     setIsFollowing(prev => !prev)
