@@ -77,7 +77,8 @@ function CreatePost() {
 
     const fetchSuggestions = async () => {
       const trimmedInput = hashtagInput.trim().replace(/^#/, '')
-      if (!trimmedInput || trimmedInput.length < 1) {
+      // 빈 문자열이면 자동완성 숨김
+      if (!trimmedInput) {
         setHashtagSuggestions([])
         setShowSuggestions(false)
         return

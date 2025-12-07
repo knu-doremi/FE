@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import PostsFeedHeader from './components/PostsFeedHeader'
 import PostList from './components/PostList'
-import { getRecommendedPosts, getFollowingPosts } from '@/lib/api/posts'
-import { searchPostsByHashtag } from '@/lib/api/hashtags'
+import { getRecommendedPosts, getFollowingPosts, getPost } from '@/lib/api/posts'
+import {
+  searchPostsByHashtag,
+  getHashtagAutocomplete,
+} from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -176,36 +179,92 @@ function PostsFeed() {
       setIsLoadingHashtagSearch(true)
       setHashtagSearchError('')
       try {
-        const response = await searchPostsByHashtag(trimmedQuery)
-        if (response.result && response.posts) {
-          // API 응답을 PostCard 형식으로 변환
-          const transformedPosts: PostCardData[] = response.posts.map(
-            (post: Post) => {
-              const hashtags = post.hashtags
-                ? post.hashtags.map(tag => tag.hashtagName)
-                : []
+        // 1. 자동완성 API로 검색어를 포함하는 해시태그 목록 가져오기
+        const autocompleteResponse = await getHashtagAutocomplete(
+          trimmedQuery
+        )
 
-              return {
-                id: post.postId,
-                author: {
-                  name: post.username || post.userId,
-                  userId: post.userId,
-                },
-                image: getImageUrl(post.imageDir),
-                content: post.content,
-                hashtags,
-                likes: post.likeCount || 0,
-                comments: post.commentCount || 0,
-                isLiked: false,
-                isBookmarked: false,
+        if (!autocompleteResponse.result || !autocompleteResponse.hashtags) {
+          setHashtagSearchResults([])
+          setIsLoadingHashtagSearch(false)
+          return
+        }
+
+        const matchingHashtags = autocompleteResponse.hashtags.map(
+          h => h.hashtagName
+        )
+
+        if (matchingHashtags.length === 0) {
+          setHashtagSearchResults([])
+          setIsLoadingHashtagSearch(false)
+          return
+        }
+
+        // 2. 각 해시태그로 게시물 검색
+        const allPostsPromises = matchingHashtags.map(hashtagName =>
+          searchPostsByHashtag(hashtagName)
+        )
+
+        const allPostsResponses = await Promise.all(allPostsPromises)
+
+        // 3. 모든 게시물을 합치고 중복 제거
+        const allPostsMap = new Map<number, Post>()
+        allPostsResponses.forEach(response => {
+          if (response.result && response.posts) {
+            response.posts.forEach(post => {
+              allPostsMap.set(post.postId, post)
+            })
+          }
+        })
+
+        const uniquePosts = Array.from(allPostsMap.values())
+
+        // 4. imageDir이 없는 게시물의 이미지 정보 가져오기
+        const postsWithImages = await Promise.all(
+          uniquePosts.map(async (post: Post) => {
+            // imageDir이 없거나 null인 경우 게시물 상세 API로 이미지 정보 가져오기
+            if (!post.imageDir) {
+              try {
+                const postDetail = await getPost(post.postId)
+                if (postDetail.result && postDetail.post) {
+                  return {
+                    ...post,
+                    imageDir: postDetail.post.imageDir || post.imageDir,
+                  }
+                }
+              } catch {
+                // 게시물 상세 조회 실패 시 원본 게시물 사용
               }
             }
-          )
-          setHashtagSearchResults(transformedPosts)
-        } else {
-          setHashtagSearchError('검색 결과를 불러올 수 없습니다.')
-          setHashtagSearchResults([])
-        }
+            return post
+          })
+        )
+
+        // 5. PostCard 형식으로 변환
+        const transformedPosts: PostCardData[] = postsWithImages.map(
+          (post: Post) => {
+            const hashtags = post.hashtags
+              ? post.hashtags.map(tag => tag.hashtagName)
+              : []
+
+            return {
+              id: post.postId,
+              author: {
+                name: post.username || post.userId,
+                userId: post.userId,
+              },
+              image: getImageUrl(post.imageDir),
+              content: post.content,
+              hashtags,
+              likes: post.likeCount || 0,
+              comments: post.commentCount || 0,
+              isLiked: false,
+              isBookmarked: false,
+            }
+          }
+        )
+
+        setHashtagSearchResults(transformedPosts)
       } catch (error) {
         const apiError = handleApiError(error)
         setHashtagSearchError(
