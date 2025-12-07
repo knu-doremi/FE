@@ -167,22 +167,29 @@ function PostsFeed() {
   // 해시태그 검색 API 호출
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout | null = null
+    let isMounted = true
 
     const fetchHashtagSearch = async () => {
       const trimmedQuery = searchQuery.trim().replace(/^#/, '') // # 제거
       if (!trimmedQuery) {
-        setHashtagSearchResults([])
-        setHashtagSearchError('')
+        if (isMounted) {
+          setHashtagSearchResults([])
+          setHashtagSearchError('')
+        }
         return
       }
 
-      setIsLoadingHashtagSearch(true)
-      setHashtagSearchError('')
+      if (isMounted) {
+        setIsLoadingHashtagSearch(true)
+        setHashtagSearchError('')
+      }
       try {
         // 1. 자동완성 API로 검색어를 포함하는 해시태그 목록 가져오기
         const autocompleteResponse = await getHashtagAutocomplete(
           trimmedQuery
         )
+
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (!autocompleteResponse.result || !autocompleteResponse.hashtags) {
           setHashtagSearchResults([])
@@ -207,6 +214,8 @@ function PostsFeed() {
 
         const allPostsResponses = await Promise.all(allPostsPromises)
 
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         // 3. 모든 게시물을 합치고 중복 제거
         const allPostsMap = new Map<number, Post>()
         allPostsResponses.forEach(response => {
@@ -226,6 +235,7 @@ function PostsFeed() {
             if (!post.imageDir) {
               try {
                 const postDetail = await getPost(post.postId)
+                if (!isMounted) return post // 컴포넌트가 언마운트되었으면 원본 반환
                 if (postDetail.result && postDetail.post) {
                   return {
                     ...post,
@@ -239,6 +249,8 @@ function PostsFeed() {
             return post
           })
         )
+
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         // 5. PostCard 형식으로 변환
         const transformedPosts: PostCardData[] = postsWithImages.map(
@@ -266,13 +278,17 @@ function PostsFeed() {
 
         setHashtagSearchResults(transformedPosts)
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setHashtagSearchError(
           apiError.message || '해시태그 검색 중 오류가 발생했습니다.'
         )
         setHashtagSearchResults([])
       } finally {
-        setIsLoadingHashtagSearch(false)
+        if (isMounted) {
+          setIsLoadingHashtagSearch(false)
+        }
       }
     }
 
@@ -282,6 +298,7 @@ function PostsFeed() {
     }, 500)
 
     return () => {
+      isMounted = false
       if (debounceTimer) {
         clearTimeout(debounceTimer)
       }
