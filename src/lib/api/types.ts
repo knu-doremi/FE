@@ -132,6 +132,76 @@ export interface DeleteCommentResponse {
   message?: string
 }
 
+// ===== 게시물 관련 타입 =====
+
+// 해시태그 객체
+export interface Hashtag {
+  HASHTAG_ID: number
+  HASHTAG_NAME: string
+}
+
+// 게시물 해시태그 객체
+export interface PostHashtag {
+  hashtagId: number
+  hashtagName: string
+}
+
+// 게시물 객체
+export interface Post {
+  postId: number
+  content: string
+  createdAt: string // ISO 8601 형식
+  userId: string
+  username?: string // 사용자 이름
+  likeCount?: number
+  commentCount?: number // 댓글 수
+  imageDir?: string // /uploads/... 형식
+  hashtags?: PostHashtag[] // 해시태그 배열
+}
+
+// 게시물 상세 조회 응답
+export interface GetPostResponse {
+  result: boolean
+  post: Post
+  message?: string
+}
+
+// 게시물 목록 조회 응답
+export interface GetPostsResponse {
+  result: boolean
+  posts: Post[]
+  message?: string
+}
+
+// 게시물 작성 요청 (form-data)
+export interface CreatePostRequest {
+  user_id: string
+  content: string
+  hashtags: string // 쉼표로 구분된 문자열 (예: "고양이, 귀여움")
+  image: File
+}
+
+// 게시물 작성 응답
+export interface CreatePostResponse {
+  result: boolean
+  message?: string
+  POST_ID?: number
+  imageDir?: string
+  imageDirs?: string[]
+  HASHTAGS?: Hashtag[]
+}
+
+// 게시물 삭제 요청
+export interface DeletePostRequest {
+  USER_ID: string
+}
+
+// 게시물 삭제 응답
+export interface DeletePostResponse {
+  result: boolean
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {

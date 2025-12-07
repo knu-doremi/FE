@@ -23,11 +23,17 @@ function PostGrid({
   const displayItems = showAddButton
     ? [
         { type: 'add' as const },
-        ...posts
-          .slice(0, 8)
-          .map(post => ({ type: 'post' as const, id: post.id })),
+        ...posts.map(post => ({
+          type: 'post' as const,
+          id: post.id,
+          image: post.image,
+        })),
       ]
-    : posts.slice(0, 9).map(post => ({ type: 'post' as const, id: post.id }))
+    : posts.map(post => ({
+        type: 'post' as const,
+        id: post.id,
+        image: post.image,
+      }))
 
   return (
     <div className="grid grid-cols-3 gap-1 py-4 lg:gap-2 lg:py-6">
@@ -56,16 +62,27 @@ function PostGrid({
           <button
             key={item.id}
             onClick={() => navigate(`/posts/${item.id}`)}
-            className="flex aspect-square cursor-pointer items-center justify-center rounded-lg bg-gray-200 transition-colors hover:bg-gray-300"
+            className="flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-200 transition-colors hover:bg-gray-300"
           >
-            <span
-              className="text-xs"
-              style={{
-                color: '#9CA3AF',
-              }}
-            >
-              Post {postIndex + 1}
-            </span>
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={`게시물 ${postIndex + 1}`}
+                className="h-full w-full object-cover"
+                onError={e => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : (
+              <span
+                className="text-xs"
+                style={{
+                  color: '#9CA3AF',
+                }}
+              >
+                Post {postIndex + 1}
+              </span>
+            )}
           </button>
         )
       })}

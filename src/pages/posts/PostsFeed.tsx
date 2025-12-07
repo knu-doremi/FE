@@ -1,69 +1,165 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import PostsFeedHeader from './components/PostsFeedHeader'
 import PostList from './components/PostList'
+import { getRecommendedPosts, getFollowingPosts } from '@/lib/api/posts'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem } from '@/lib/utils/storage'
+import { getImageUrl } from '@/lib/utils/format'
+import type { LoginUser, Post } from '@/lib/api/types'
+
+interface PostCardData {
+  id: number
+  author: {
+    name: string
+    userId: string
+  }
+  image: string
+  content: string
+  hashtags?: string[]
+  likes: number
+  comments: number
+  isLiked?: boolean
+  isBookmarked?: boolean
+}
 
 function PostsFeed() {
   const [activeTab, setActiveTab] = useState<'recommended' | 'following'>(
     'recommended'
   )
   const [searchQuery, setSearchQuery] = useState('')
+  const [recommendedPosts, setRecommendedPosts] = useState<PostCardData[]>([])
+  const [isLoadingRecommended, setIsLoadingRecommended] = useState(false)
+  const [recommendedError, setRecommendedError] = useState<string>('')
+  const [followingPosts, setFollowingPosts] = useState<PostCardData[]>([])
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState(false)
+  const [followingError, setFollowingError] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
-  // TODO: 실제 게시물 데이터로 교체
-  const recommendedPosts = [
-    {
-      id: 1,
-      author: {
-        name: '사용자1',
-        userId: 'user1',
-      },
-      image: 'https://via.placeholder.com/400x400',
-      content:
-        '간이 SNS 디자인 초안 완성! Tailwind 정말 편리 하네요. 오늘은 모바일 환경에 최적화된 레이아웃을 구성하는 작업을 주로 진행했습니다.',
-      hashtags: ['대박', '히히'],
-      likes: 1234,
-      comments: 45,
-      isLiked: false,
-      isBookmarked: false,
-    },
-    {
-      id: 2,
-      author: {
-        name: '사용자2',
-        userId: 'user2',
-      },
-      image: 'https://via.placeholder.com/400x400',
-      content: '오늘 날씨가 정말 좋네요!',
-      hashtags: ['날씨', '좋아요'],
-      likes: 567,
-      comments: 12,
-      isLiked: true,
-      isBookmarked: true,
-    },
-  ]
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
 
-  const followingPosts = [
-    {
-      id: 3,
-      author: {
-        name: '팔로잉 사용자1',
-        userId: 'following1',
-      },
-      image: 'https://via.placeholder.com/400x400',
-      content: '팔로잉한 사용자의 게시물입니다.',
-      hashtags: ['팔로잉'],
-      likes: 89,
-      comments: 5,
-      isLiked: false,
-      isBookmarked: false,
-    },
-  ]
+  // 추천 게시물 조회
+  useEffect(() => {
+    const fetchRecommendedPosts = async () => {
+      if (!currentUser) return
+
+      setIsLoadingRecommended(true)
+      setRecommendedError('')
+      try {
+        const response = await getRecommendedPosts(currentUser.USER_ID)
+        if (response.result && response.posts) {
+          // API 응답을 PostCard 형식으로 변환
+          const transformedPosts: PostCardData[] = response.posts.map(
+            (post: Post) => {
+              // 해시태그 변환 (API 응답에 hashtags가 없을 수도 있음)
+              const hashtags = post.hashtags
+                ? post.hashtags.map(tag => tag.hashtagName)
+                : []
+
+              return {
+                id: post.postId,
+                author: {
+                  name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
+                  userId: post.userId,
+                },
+                image: getImageUrl(post.imageDir),
+                content: post.content,
+                hashtags, // 해시태그 배열
+                likes: post.likeCount || 0,
+                comments: post.commentCount || 0, // API 응답의 댓글 수 사용
+                isLiked: false,
+                isBookmarked: false,
+              }
+            }
+          )
+          setRecommendedPosts(transformedPosts)
+        } else {
+          setRecommendedError('추천 게시물을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setRecommendedError(
+          apiError.message || '추천 게시물을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        setIsLoadingRecommended(false)
+      }
+    }
+
+    if (activeTab === 'recommended' && currentUser) {
+      fetchRecommendedPosts()
+    }
+  }, [activeTab, currentUser])
+
+  // 팔로잉 게시물 조회
+  useEffect(() => {
+    const fetchFollowingPosts = async () => {
+      if (!currentUser) return
+
+      setIsLoadingFollowing(true)
+      setFollowingError('')
+      try {
+        const response = await getFollowingPosts(currentUser.USER_ID)
+        if (response.result && response.posts) {
+          // API 응답을 PostCard 형식으로 변환
+          const transformedPosts: PostCardData[] = response.posts.map(
+            (post: Post) => {
+              // 해시태그 변환 (API 응답에 hashtags가 없을 수도 있음)
+              const hashtags = post.hashtags
+                ? post.hashtags.map(tag => tag.hashtagName)
+                : []
+
+              return {
+                id: post.postId,
+                author: {
+                  name: post.username || post.userId, // username이 있으면 사용, 없으면 userId 사용
+                  userId: post.userId,
+                },
+                image: getImageUrl(post.imageDir),
+                content: post.content,
+                hashtags, // 해시태그 배열
+                likes: post.likeCount || 0,
+                comments: post.commentCount || 0, // API 응답의 댓글 수 사용
+                isLiked: false,
+                isBookmarked: false,
+              }
+            }
+          )
+          setFollowingPosts(transformedPosts)
+        } else {
+          setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setFollowingError(
+          apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        setIsLoadingFollowing(false)
+      }
+    }
+
+    if (activeTab === 'following' && currentUser) {
+      fetchFollowingPosts()
+    }
+  }, [activeTab, currentUser])
 
   // 검색어에 따라 게시물 필터링
   const filterPostsByHashtag = (
-    posts: typeof recommendedPosts,
+    posts: PostCardData[],
     query: string
-  ) => {
+  ): PostCardData[] => {
     if (!query.trim()) return posts
 
     const searchTerm = query.trim().toLowerCase().replace(/^#/, '') // # 제거
@@ -87,7 +183,43 @@ function PostsFeed() {
         onSearchChange={setSearchQuery}
       />
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-6 lg:py-6">
-        <PostList posts={filteredPosts} />
+        {activeTab === 'recommended' && isLoadingRecommended ? (
+          <div className="py-12 text-center">
+            <p
+              className="text-sm lg:text-base"
+              style={{
+                color: '#9CA3AF',
+              }}
+            >
+              추천 게시물을 불러오는 중...
+            </p>
+          </div>
+        ) : activeTab === 'recommended' && recommendedError ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-red-600 lg:text-base">
+              {recommendedError}
+            </p>
+          </div>
+        ) : activeTab === 'following' && isLoadingFollowing ? (
+          <div className="py-12 text-center">
+            <p
+              className="text-sm lg:text-base"
+              style={{
+                color: '#9CA3AF',
+              }}
+            >
+              팔로잉 게시물을 불러오는 중...
+            </p>
+          </div>
+        ) : activeTab === 'following' && followingError ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-red-600 lg:text-base">
+              {followingError}
+            </p>
+          </div>
+        ) : (
+          <PostList posts={filteredPosts} />
+        )}
       </div>
       <BottomNavigation />
     </div>

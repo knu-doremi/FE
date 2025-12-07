@@ -1,22 +1,89 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useLocation } from 'react-router-dom'
 import ProfileHeader from './components/ProfileHeader'
 import ProfileInfo from './components/ProfileInfo'
 import ProfileStats from './components/ProfileStats'
 import ProfileTabs from './components/ProfileTabs'
 import PostGrid from './components/PostGrid'
 import BottomNavigation from './components/BottomNavigation'
+import { getPostsByUser } from '@/lib/api/posts'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem } from '@/lib/utils/storage'
+import { getImageUrl } from '@/lib/utils/format'
+import type { LoginUser, Post } from '@/lib/api/types'
 
 function Profile() {
   const { userId: urlUserId } = useParams<{ userId?: string }>()
+  const location = useLocation()
   const isOwnProfile = !urlUserId
 
-  // TODO: 실제 사용자 데이터로 교체 (urlUserId가 있으면 해당 사용자 데이터, 없으면 본인 데이터)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false)
+  const [postsError, setPostsError] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
+
+  // 사용자별 게시물 조회
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchPosts = async () => {
+      // 표시할 사용자 ID 결정 (urlUserId가 있으면 해당 사용자, 없으면 현재 로그인한 사용자)
+      const targetUserId = urlUserId || currentUser?.USER_ID
+      if (!targetUserId) return
+
+      setIsLoadingPosts(true)
+      setPostsError('')
+      try {
+        const response = await getPostsByUser(targetUserId)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result && response.posts) {
+          setPosts(response.posts)
+        } else {
+          setPostsError('게시물을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        const apiError = handleApiError(error)
+        setPostsError(
+          apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        if (isMounted) {
+          setIsLoadingPosts(false)
+        }
+      }
+    }
+
+    // urlUserId가 있거나 currentUser가 있을 때만 조회
+    if (urlUserId || currentUser) {
+      fetchPosts()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, currentUser, location.pathname])
+
+  // TODO: 실제 사용자 데이터로 교체
   const userData = {
-    name: urlUserId ? `사용자_${urlUserId}` : '사용자',
-    userId: urlUserId || 'user_officials',
+    name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
+    userId: urlUserId || currentUser?.USER_ID || 'user_officials',
     gender: 'female' as const,
     birthDate: '2000-01-01',
     stats: {
@@ -25,9 +92,14 @@ function Profile() {
       following: 88,
       posts: 123,
     },
-    posts: [{ id: 1 }, { id: 2 }, { id: 3 }],
     bookmarkedPosts: [{ id: 4 }, { id: 5 }, { id: 6 }, { id: 7 }],
   }
+
+  // PostGrid에 전달할 게시물 데이터 변환
+  const postGridData = posts.map(post => ({
+    id: post.postId,
+    image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
+  }))
 
   const handleFollowToggle = () => {
     setIsFollowing(prev => !prev)
@@ -52,7 +124,26 @@ function Profile() {
         />
         <ProfileTabs
           postsContent={
-            <PostGrid posts={userData.posts} showAddButton={isOwnProfile} />
+            isLoadingPosts ? (
+              <div className="py-12 text-center">
+                <p
+                  className="text-sm lg:text-base"
+                  style={{
+                    color: '#9CA3AF',
+                  }}
+                >
+                  게시물을 불러오는 중...
+                </p>
+              </div>
+            ) : postsError ? (
+              <div className="py-12 text-center">
+                <p className="text-sm text-red-600 lg:text-base">
+                  {postsError}
+                </p>
+              </div>
+            ) : (
+              <PostGrid posts={postGridData} showAddButton={isOwnProfile} />
+            )
           }
           savedContent={
             <PostGrid posts={userData.bookmarkedPosts} showAddButton={false} />
