@@ -8,6 +8,7 @@ import FormErrorMessage from '../auth/components/FormErrorMessage'
 import logoImage from '@/assets/images/doremi-logo.png'
 import { X } from 'lucide-react'
 import { createPost } from '@/lib/api/posts'
+import { getHashtagAutocomplete } from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import type { LoginUser } from '@/lib/api/types'
@@ -51,6 +52,11 @@ function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [hashtagSuggestions, setHashtagSuggestions] = useState<
+    Array<{ hashtagName: string; postCount: number }>
+  >([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -64,6 +70,49 @@ function CreatePost() {
       }
     }
   }, [])
+
+  // 해시태그 자동완성 API 호출
+  useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null
+
+    const fetchSuggestions = async () => {
+      const trimmedInput = hashtagInput.trim().replace(/^#/, '')
+      if (!trimmedInput || trimmedInput.length < 1) {
+        setHashtagSuggestions([])
+        setShowSuggestions(false)
+        return
+      }
+
+      setIsLoadingSuggestions(true)
+      try {
+        const response = await getHashtagAutocomplete(trimmedInput, 5)
+        if (response.result && response.hashtags) {
+          setHashtagSuggestions(response.hashtags)
+          setShowSuggestions(true)
+        } else {
+          setHashtagSuggestions([])
+          setShowSuggestions(false)
+        }
+      } catch (error) {
+        // 자동완성 실패는 무시
+        setHashtagSuggestions([])
+        setShowSuggestions(false)
+      } finally {
+        setIsLoadingSuggestions(false)
+      }
+    }
+
+    // 디바운싱: 300ms 후에 API 호출
+    debounceTimer = setTimeout(() => {
+      fetchSuggestions()
+    }, 300)
+
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+    }
+  }, [hashtagInput])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -179,14 +228,15 @@ function CreatePost() {
     }
   }
 
-  const addHashtag = () => {
+  const addHashtag = (tagName?: string) => {
     if (isAddingHashtagRef.current) return
     isAddingHashtagRef.current = true
 
-    const currentInput = hashtagInput.trim().replace(/^#/, '')
+    const currentInput = tagName || hashtagInput.trim().replace(/^#/, '')
 
     // 입력 필드 먼저 초기화
     setHashtagInput('')
+    setShowSuggestions(false)
 
     // ref를 사용해서 직접 입력 필드 초기화 (즉시)
     if (hashtagInputRef.current) {
@@ -215,6 +265,10 @@ function CreatePost() {
         setHashtagInput('')
       }
     }, 50)
+  }
+
+  const handleSuggestionClick = (hashtagName: string) => {
+    addHashtag(hashtagName)
   }
 
   const handleHashtagButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -394,32 +448,78 @@ function CreatePost() {
           {/* 해시태그 - form 밖으로 분리 */}
           <div className="mt-4 space-y-2">
             <Label htmlFor="post-hashtags">해시태그 (Hashtags)</Label>
-            <div className="flex gap-2">
-              <Input
-                ref={hashtagInputRef}
-                id="post-hashtags"
-                type="text"
-                placeholder="#해시태그 입력 후 엔터"
-                value={hashtagInput}
-                onChange={e => setHashtagInput(e.target.value)}
-                onKeyDown={handleHashtagInputKeyDown}
-              />
-              <Button
-                type="button"
-                onClick={handleHashtagButtonClick}
-                className="text-white"
-                style={{
-                  backgroundColor: '#B9BDDE',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.backgroundColor = '#A5A9D0'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.backgroundColor = '#B9BDDE'
-                }}
-              >
-                추가
-              </Button>
+            <div className="relative">
+              <div className="flex gap-2">
+                <Input
+                  ref={hashtagInputRef}
+                  id="post-hashtags"
+                  type="text"
+                  placeholder="#해시태그 입력 후 엔터"
+                  value={hashtagInput}
+                  onChange={e => setHashtagInput(e.target.value)}
+                  onKeyDown={handleHashtagInputKeyDown}
+                  onFocus={() => {
+                    if (hashtagSuggestions.length > 0) {
+                      setShowSuggestions(true)
+                    }
+                  }}
+                  onBlur={() => {
+                    // 드롭다운 클릭을 위해 약간의 지연
+                    setTimeout(() => {
+                      setShowSuggestions(false)
+                    }, 200)
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={handleHashtagButtonClick}
+                  className="text-white"
+                  style={{
+                    backgroundColor: '#B9BDDE',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = '#A5A9D0'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = '#B9BDDE'
+                  }}
+                >
+                  추가
+                </Button>
+              </div>
+              {/* 자동완성 드롭다운 */}
+              {showSuggestions && hashtagSuggestions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
+                  <div className="max-h-48 overflow-y-auto">
+                    {hashtagSuggestions.map(suggestion => (
+                      <button
+                        key={suggestion.hashtagName}
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion.hashtagName)}
+                        className="w-full cursor-pointer px-4 py-2 text-left text-sm hover:bg-gray-100"
+                        onMouseDown={e => {
+                          // onBlur 이벤트가 발생하기 전에 클릭 처리
+                          e.preventDefault()
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            #{suggestion.hashtagName}
+                          </span>
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {suggestion.postCount}개 게시물
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             {formData.hashtags.length > 0 && (
               <div className="flex flex-wrap gap-2">
