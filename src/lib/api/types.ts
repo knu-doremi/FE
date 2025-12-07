@@ -202,6 +202,38 @@ export interface DeletePostResponse {
   message?: string
 }
 
+// ===== 해시태그 관련 타입 =====
+
+// 해시태그 자동완성 항목
+export interface HashtagAutocompleteItem {
+  hashtagName: string
+  postCount: number
+}
+
+// 해시태그 자동완성 응답
+export interface GetHashtagAutocompleteResponse {
+  result: boolean
+  searchTerm: string
+  hashtags: HashtagAutocompleteItem[]
+  message?: string
+}
+
+// 해시태그로 게시물 검색 응답
+export interface SearchPostsByHashtagResponse {
+  result: boolean
+  hashtagName: string
+  posts: Post[]
+  message?: string
+}
+
+// 게시물 해시태그 목록 조회 응답
+export interface GetPostHashtagsResponse {
+  result: boolean
+  postId: number
+  hashtags: PostHashtag[]
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {
