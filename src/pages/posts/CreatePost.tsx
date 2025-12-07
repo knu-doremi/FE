@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,10 @@ import { Label } from '@/components/ui/label'
 import FormErrorMessage from '../auth/components/FormErrorMessage'
 import logoImage from '@/assets/images/doremi-logo.png'
 import { X } from 'lucide-react'
+import { createPost } from '@/lib/api/posts'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem } from '@/lib/utils/storage'
+import type { LoginUser } from '@/lib/api/types'
 
 interface CreatePostErrors {
   content?: string
@@ -44,18 +48,63 @@ function CreatePost() {
   const [hashtagInput, setHashtagInput] = useState('')
   const [errors, setErrors] = useState<CreatePostErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validateCreatePostForm({
       content: formData.content,
       image: formData.image,
     })
     setErrors(validationErrors)
+    setSubmitError('')
 
-    if (Object.keys(validationErrors).length === 0) {
-      // TODO: API 연동
-      navigate('/profile')
+    if (
+      Object.keys(validationErrors).length === 0 &&
+      currentUser &&
+      formData.image
+    ) {
+      setIsSubmitting(true)
+      try {
+        // 해시태그를 쉼표로 구분된 문자열로 변환
+        const hashtagsString = formData.hashtags.join(', ')
+
+        const response = await createPost({
+          user_id: currentUser.USER_ID,
+          content: formData.content,
+          hashtags: hashtagsString,
+          image: formData.image,
+        })
+
+        if (response.result) {
+          // 성공 시 프로필 페이지로 리다이렉트
+          navigate('/profile')
+        } else {
+          setSubmitError(response.message || '게시물 작성에 실패했습니다.')
+        }
+      } catch (error) {
+        const apiError = handleApiError(error)
+        setSubmitError(
+          apiError.message || '게시물 작성 중 오류가 발생했습니다.'
+        )
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -418,19 +467,29 @@ function CreatePost() {
               type="button"
               onClick={handleSubmit}
               className="flex-1 text-white"
+              disabled={isSubmitting}
               style={{
-                backgroundColor: '#B9BDDE',
+                backgroundColor: isSubmitting ? '#9CA3AF' : '#B9BDDE',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = '#A5A9D0'
+                if (!isSubmitting) {
+                  e.currentTarget.style.backgroundColor = '#A5A9D0'
+                }
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = '#B9BDDE'
+                if (!isSubmitting) {
+                  e.currentTarget.style.backgroundColor = '#B9BDDE'
+                }
               }}
             >
-              게시하기
+              {isSubmitting ? '게시 중...' : '게시하기'}
             </Button>
           </div>
+          {submitError && (
+            <div className="mt-4 rounded-md bg-red-50 p-3">
+              <p className="text-sm text-red-600">{submitError}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
