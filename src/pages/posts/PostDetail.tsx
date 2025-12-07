@@ -11,10 +11,11 @@ import {
   deleteComment,
 } from '@/lib/api/comments'
 import { getPost, deletePost } from '@/lib/api/posts'
+import { getPostHashtags } from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
-import type { Comment, LoginUser, Post } from '@/lib/api/types'
+import type { Comment, LoginUser, Post, PostHashtag } from '@/lib/api/types'
 
 function PostDetail() {
   const { postId } = useParams<{ postId: string }>()
@@ -43,6 +44,7 @@ function PostDetail() {
   const [postError, setPostError] = useState<string>('')
   const [isDeletingPost, setIsDeletingPost] = useState(false)
   const [deletePostError, setDeletePostError] = useState<string>('')
+  const [postHashtags, setPostHashtags] = useState<PostHashtag[]>([])
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -68,6 +70,14 @@ function PostDetail() {
         const response = await getPost(parseInt(postId))
         if (response.result && response.post) {
           setPost(response.post)
+
+          // 게시물 응답에 해시태그가 없거나 비어있으면 별도 API로 조회
+          if (!response.post.hashtags || response.post.hashtags.length === 0) {
+            fetchPostHashtags(parseInt(postId))
+          } else {
+            // 게시물 응답에 해시태그가 있으면 그대로 사용
+            setPostHashtags(response.post.hashtags)
+          }
         } else {
           setPostError('게시물을 불러올 수 없습니다.')
         }
@@ -83,6 +93,20 @@ function PostDetail() {
 
     fetchPost()
   }, [postId])
+
+  // 게시물 해시태그 목록 조회
+  const fetchPostHashtags = async (postId: number) => {
+    try {
+      const response = await getPostHashtags(postId)
+      if (response.result && response.hashtags) {
+        setPostHashtags(response.hashtags)
+      }
+    } catch (error) {
+      // 해시태그 조회 실패는 무시 (게시물은 이미 표시됨)
+      const apiError = handleApiError(error)
+      console.warn('해시태그 조회 실패:', apiError.message)
+    }
+  }
 
   // 댓글 목록 조회
   const fetchComments = async () => {
@@ -386,7 +410,8 @@ function PostDetail() {
                 </div>
 
                 {/* 해시태그 */}
-                {post.hashtags && post.hashtags.length > 0 && (
+                {(post.hashtags && post.hashtags.length > 0) ||
+                postHashtags.length > 0 ? (
                   <div className="space-y-2">
                     <Label
                       className="text-sm font-medium"
@@ -397,7 +422,10 @@ function PostDetail() {
                       해시태그
                     </Label>
                     <div className="flex flex-wrap gap-2">
-                      {post.hashtags.map(tag => (
+                      {(post.hashtags && post.hashtags.length > 0
+                        ? post.hashtags
+                        : postHashtags
+                      ).map(tag => (
                         <span
                           key={tag.hashtagId}
                           className="rounded-md px-3 py-1 text-sm"
@@ -411,7 +439,7 @@ function PostDetail() {
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* 좋아요 */}
                 <div className="space-y-2">
