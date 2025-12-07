@@ -136,14 +136,35 @@ function SignupForm() {
           setIsCheckingId(true)
           try {
             const response = await checkId({ userid: formData.userId })
+            // 백엔드 응답 패턴:
+            // - 사용 가능: {"result":true,"count":0,"message":"Username is available"}
+            // - 중복: {"result":false,"count":1,"message":"Username already exists"}
             if (response.result && response.count === 0) {
+              // result가 true이고 count가 0이면 사용 가능한 아이디
               setIsIdAvailable(true)
               setIdCheckError('')
-            } else {
+            } else if (
+              !response.result &&
+              response.count !== null &&
+              response.count > 0
+            ) {
+              // result가 false이고 count > 0이면 중복되는 아이디
               setIsIdAvailable(false)
-              // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
-              // 모든 경우에 한국어 메시지로 통일
               setIdCheckError('이미 사용 중인 아이디입니다.')
+            } else if (
+              response.result &&
+              response.count !== null &&
+              response.count > 0
+            ) {
+              // result가 true이지만 count > 0인 경우도 중복으로 처리
+              setIsIdAvailable(false)
+              setIdCheckError('이미 사용 중인 아이디입니다.')
+            } else {
+              // 그 외의 경우는 서버 오류로 처리
+              setIsIdAvailable(false)
+              setIdCheckError(
+                response.message || '아이디 중복확인 중 오류가 발생했습니다.'
+              )
             }
           } catch (error) {
             const apiError = handleApiError(error)
@@ -237,14 +258,35 @@ function SignupForm() {
     setIdCheckError('')
     try {
       const response = await checkId({ userid: formData.userId })
+      // 백엔드 응답 패턴:
+      // - 사용 가능: {"result":true,"count":0,"message":"Username is available"}
+      // - 중복: {"result":false,"count":1,"message":"Username already exists"}
       if (response.result && response.count === 0) {
+        // result가 true이고 count가 0이면 사용 가능한 아이디
         setIsIdAvailable(true)
         setIdCheckError('')
-      } else {
+      } else if (
+        !response.result &&
+        response.count !== null &&
+        response.count > 0
+      ) {
+        // result가 false이고 count > 0이면 중복되는 아이디
         setIsIdAvailable(false)
-        // response.count > 0이면 무조건 중복이므로 한국어 메시지 사용
-        // 모든 경우에 한국어 메시지로 통일
         setIdCheckError('이미 사용 중인 아이디입니다.')
+      } else if (
+        response.result &&
+        response.count !== null &&
+        response.count > 0
+      ) {
+        // result가 true이지만 count > 0인 경우도 중복으로 처리
+        setIsIdAvailable(false)
+        setIdCheckError('이미 사용 중인 아이디입니다.')
+      } else {
+        // 그 외의 경우는 서버 오류로 처리
+        setIsIdAvailable(false)
+        setIdCheckError(
+          response.message || '아이디 중복확인 중 오류가 발생했습니다.'
+        )
       }
     } catch (error) {
       const apiError = handleApiError(error)

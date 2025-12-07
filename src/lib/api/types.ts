@@ -61,7 +61,7 @@ export interface CheckIdRequest {
 // 아이디 중복확인 응답
 export interface CheckIdResponse {
   result: boolean
-  count: number
+  count: number | null // null일 수 있음 (사용 가능한 경우)
   message: string
 }
 
