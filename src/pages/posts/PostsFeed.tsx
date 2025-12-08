@@ -6,6 +6,7 @@ import { getRecommendedPosts, getFollowingPosts, getPost } from '@/lib/api/posts
 import {
   searchPostsByHashtag,
   getHashtagAutocomplete,
+  getPostHashtags,
 } from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
@@ -228,25 +229,43 @@ function PostsFeed() {
 
         const uniquePosts = Array.from(allPostsMap.values())
 
-        // 4. imageDir이 없는 게시물의 이미지 정보 가져오기
+        // 4. imageDir이 없는 게시물의 이미지 정보 및 해시태그 정보 가져오기
         const postsWithImages = await Promise.all(
           uniquePosts.map(async (post: Post) => {
+            let updatedPost = { ...post }
+
             // imageDir이 없거나 null인 경우 게시물 상세 API로 이미지 정보 가져오기
             if (!post.imageDir) {
               try {
                 const postDetail = await getPost(post.postId)
                 if (!isMounted) return post // 컴포넌트가 언마운트되었으면 원본 반환
                 if (postDetail.result && postDetail.post) {
-                  return {
-                    ...post,
-                    imageDir: postDetail.post.imageDir || post.imageDir,
+                  updatedPost.imageDir =
+                    postDetail.post.imageDir || post.imageDir
+                  // 게시물 상세 API 응답에 해시태그가 있으면 사용
+                  if (postDetail.post.hashtags) {
+                    updatedPost.hashtags = postDetail.post.hashtags
                   }
                 }
               } catch {
                 // 게시물 상세 조회 실패 시 원본 게시물 사용
               }
             }
-            return post
+
+            // 해시태그가 없으면 해시태그 API로 가져오기
+            if (!updatedPost.hashtags || updatedPost.hashtags.length === 0) {
+              try {
+                const hashtagsResponse = await getPostHashtags(post.postId)
+                if (!isMounted) return updatedPost
+                if (hashtagsResponse.result && hashtagsResponse.hashtags) {
+                  updatedPost.hashtags = hashtagsResponse.hashtags
+                }
+              } catch {
+                // 해시태그 조회 실패 시 원본 게시물 사용
+              }
+            }
+
+            return updatedPost
           })
         )
 
