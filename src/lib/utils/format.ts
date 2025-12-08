@@ -95,13 +95,20 @@ export function getImageUrl(imageDir?: string): string {
     return normalizedPath
   }
 
-  // 프로덕션: 환경 변수 또는 기본값 사용
-  const backendBaseUrl =
-    import.meta.env.VITE_API_BASE_URL &&
-    import.meta.env.VITE_API_BASE_URL !== ''
-      ? import.meta.env.VITE_API_BASE_URL
-      : 'http://localhost:3000'
+  // 프로덕션: 환경 변수 사용 (필수)
+  // VITE_API_BASE_URL이 없으면 경고하고 빈 문자열 반환
+  const backendBaseUrl = import.meta.env.VITE_API_BASE_URL
+
+  if (!backendBaseUrl) {
+    console.warn(
+      '⚠️ VITE_API_BASE_URL이 설정되지 않았습니다. 이미지를 불러올 수 없습니다.'
+    )
+    return ''
+  }
+
+  // 백엔드 URL에서 /api 제거 (이미지는 /uploads/...로 직접 접근)
+  const baseUrl = backendBaseUrl.replace(/\/api$/, '')
 
   // 백엔드 URL과 imageDir 결합
-  return `${backendBaseUrl}${normalizedPath}`
+  return `${baseUrl}${normalizedPath}`
 }
