@@ -570,9 +570,19 @@ function PostDetail() {
                             />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {comment.username || comment.USER_ID}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {comment.username || comment.USER_ID}
+                              </p>
+                              <p
+                                className="text-xs"
+                                style={{
+                                  color: '#6B7280',
+                                }}
+                              >
+                                @{comment.USER_ID}
+                              </p>
+                            </div>
                             <p
                               className="text-xs"
                               style={{
@@ -736,9 +746,19 @@ function PostDetail() {
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-xs font-semibold text-gray-900">
-                                      {reply.username || reply.USER_ID}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-xs font-semibold text-gray-900">
+                                        {reply.username || reply.USER_ID}
+                                      </p>
+                                      <p
+                                        className="text-xs"
+                                        style={{
+                                          color: '#6B7280',
+                                        }}
+                                      >
+                                        @{reply.USER_ID}
+                                      </p>
+                                    </div>
                                     <p
                                       className="text-xs"
                                       style={{
