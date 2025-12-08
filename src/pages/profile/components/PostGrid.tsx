@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface PostGridProps {
-  posts?: Array<{ id: number; image?: string }>
+  posts?: Array<{ id: number; image?: string; content?: string }>
   onAddPost?: () => void
   showAddButton?: boolean
 }
@@ -27,12 +27,14 @@ function PostGrid({
           type: 'post' as const,
           id: post.id,
           image: post.image,
+          content: post.content,
         })),
       ]
     : posts.map(post => ({
         type: 'post' as const,
         id: post.id,
         image: post.image,
+        content: post.content,
       }))
 
   return (
@@ -62,7 +64,7 @@ function PostGrid({
           <button
             key={item.id}
             onClick={() => navigate(`/posts/${item.id}`)}
-            className="flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-200 transition-colors hover:bg-gray-300"
+            className="flex aspect-square cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-colors hover:border-gray-300 hover:shadow-md"
           >
             {item.image ? (
               <img
@@ -74,14 +76,29 @@ function PostGrid({
                 }}
               />
             ) : (
-              <span
-                className="text-xs"
-                style={{
-                  color: '#9CA3AF',
-                }}
-              >
-                Post {postIndex + 1}
-              </span>
+              <div className="flex h-full w-full items-center justify-center p-2">
+                {item.content ? (
+                  <p
+                    className="text-center text-sm leading-relaxed"
+                    style={{
+                      color: '#374151',
+                    }}
+                  >
+                    {item.content.length > 50
+                      ? `${item.content.slice(0, 50)}...`
+                      : item.content}
+                  </p>
+                ) : (
+                  <span
+                    className="text-sm"
+                    style={{
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    Post {postIndex + 1}
+                  </span>
+                )}
+              </div>
             )}
           </button>
         )

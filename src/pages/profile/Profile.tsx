@@ -99,6 +99,7 @@ function Profile() {
   const postGridData = posts.map(post => ({
     id: post.postId,
     image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
+    content: post.content,
   }))
 
   const handleFollowToggle = () => {
