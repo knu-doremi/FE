@@ -19,7 +19,9 @@ if (import.meta.env.PROD && !baseURL) {
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
   baseURL: baseURL || '/api', // 환경 변수가 없으면 상대 경로 사용 (개발 환경용)
-  withCredentials: import.meta.env.PROD, // 프로덕션에서만 쿠키 포함
+  // withCredentials는 백엔드 CORS 설정에 따라 조정 필요
+  // 백엔드가 wildcard(*)를 사용하면 withCredentials를 false로 설정해야 함
+  withCredentials: false, // CORS 오류 방지를 위해 false로 설정
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
