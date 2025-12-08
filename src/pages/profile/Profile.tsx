@@ -91,8 +91,10 @@ function Profile() {
     const fetchBookmarks = async () => {
       if (!isOwnProfile || !currentUser) return
 
-      setIsLoadingBookmarks(true)
-      setBookmarksError('')
+      if (isMounted) {
+        setIsLoadingBookmarks(true)
+        setBookmarksError('')
+      }
       try {
         const response = await getBookmarks({
           userId: currentUser.USER_ID,
@@ -100,17 +102,23 @@ function Profile() {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (response.result && response.posts) {
-          setBookmarkedPosts(response.posts)
+          if (isMounted) {
+            setBookmarkedPosts(response.posts)
+          }
         } else {
-          setBookmarksError('북마크를 불러올 수 없습니다.')
+          if (isMounted) {
+            setBookmarksError('북마크를 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setBookmarksError(
-          apiError.message || '북마크를 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setBookmarksError(
+            apiError.message || '북마크를 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingBookmarks(false)

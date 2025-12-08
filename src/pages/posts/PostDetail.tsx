@@ -347,6 +347,7 @@ function PostDetail() {
   const handleToggleBookmark = async () => {
     if (!currentUser || !postId || isTogglingBookmark) return
 
+    let isMounted = true
     setIsTogglingBookmark(true)
     try {
       if (isBookmarked) {
@@ -355,7 +356,7 @@ function PostDetail() {
           postId: parseInt(postId),
           userId: currentUser.USER_ID,
         })
-        if (response.result) {
+        if (isMounted && response.result) {
           setIsBookmarked(false)
         }
       } else {
@@ -364,7 +365,7 @@ function PostDetail() {
           postId: parseInt(postId),
           userId: currentUser.USER_ID,
         })
-        if (response.result) {
+        if (isMounted && response.result) {
           setIsBookmarked(true)
         }
       }
@@ -373,7 +374,9 @@ function PostDetail() {
       // 에러 발생 시 사용자에게 알림 (선택사항)
       console.error('북마크 토글 실패:', apiError.message)
     } finally {
-      setIsTogglingBookmark(false)
+      if (isMounted) {
+        setIsTogglingBookmark(false)
+      }
     }
   }
 
