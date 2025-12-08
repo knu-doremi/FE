@@ -8,6 +8,9 @@ interface ProfileInfoProps {
   isOwnProfile?: boolean
   isFollowing?: boolean
   onFollowToggle?: () => void
+  isTogglingFollow?: boolean
+  isLoadingFollowState?: boolean
+  followError?: string
 }
 
 function ProfileInfo({
@@ -16,6 +19,9 @@ function ProfileInfo({
   isOwnProfile = true,
   isFollowing = false,
   onFollowToggle,
+  isTogglingFollow = false,
+  isLoadingFollowState = false,
+  followError,
 }: ProfileInfoProps) {
   const navigate = useNavigate()
 
@@ -78,23 +84,39 @@ function ProfileInfo({
       ) : (
         <Button
           onClick={handleFollowClick}
-          className="w-full max-w-xs cursor-pointer text-white lg:max-w-sm lg:py-6 lg:text-base"
+          disabled={isTogglingFollow || isLoadingFollowState}
+          className="w-full max-w-xs cursor-pointer text-white lg:max-w-sm lg:py-6 lg:text-base disabled:cursor-not-allowed disabled:opacity-50"
           style={{
             backgroundColor: isFollowing ? '#9CA3AF' : '#B9BDDE',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.backgroundColor = isFollowing
-              ? '#6B7280'
-              : '#A5A9D0'
+            if (!isTogglingFollow && !isLoadingFollowState) {
+              e.currentTarget.style.backgroundColor = isFollowing
+                ? '#6B7280'
+                : '#A5A9D0'
+            }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isFollowing
-              ? '#9CA3AF'
-              : '#B9BDDE'
+            if (!isTogglingFollow && !isLoadingFollowState) {
+              e.currentTarget.style.backgroundColor = isFollowing
+                ? '#9CA3AF'
+                : '#B9BDDE'
+            }
           }}
         >
-          {isFollowing ? '팔로잉' : '팔로우'}
+          {isLoadingFollowState
+            ? '확인 중...'
+            : isTogglingFollow
+              ? '처리 중...'
+              : isFollowing
+                ? '팔로잉'
+                : '팔로우'}
         </Button>
+      )}
+
+      {/* 팔로우 에러 메시지 */}
+      {followError && !isOwnProfile && (
+        <p className="text-sm text-red-600">{followError}</p>
       )}
     </div>
   )

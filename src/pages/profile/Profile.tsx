@@ -9,6 +9,7 @@ import BottomNavigation from './components/BottomNavigation'
 import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
 import { getTotalLikes } from '@/lib/api/likes'
+import { checkFollowState, toggleFollow } from '@/lib/api/follow'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -20,6 +21,9 @@ function Profile() {
   const isOwnProfile = !urlUserId
 
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isLoadingFollowState, setIsLoadingFollowState] = useState(false)
+  const [isTogglingFollow, setIsTogglingFollow] = useState(false)
+  const [followError, setFollowError] = useState<string>('')
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [postsError, setPostsError] = useState<string>('')
@@ -169,6 +173,59 @@ function Profile() {
     }
   }, [urlUserId, currentUser, location.pathname])
 
+  // 팔로우 상태 확인 (다른 사용자 프로필일 때만)
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchFollowState = async () => {
+      // 자신의 프로필이거나, 현재 사용자나 대상 사용자가 없으면 조회하지 않음
+      if (isOwnProfile || !currentUser || !urlUserId) return
+
+      if (isMounted) {
+        setIsLoadingFollowState(true)
+        setFollowError('')
+      }
+      try {
+        const response = await checkFollowState({
+          followerId: currentUser.USER_ID,
+          followingId: urlUserId,
+        })
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result) {
+          if (isMounted) {
+            setIsFollowing(response.following)
+          }
+        } else {
+          if (isMounted) {
+            setFollowError('팔로우 상태를 확인할 수 없습니다.')
+          }
+        }
+      } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        const apiError = handleApiError(error)
+        if (isMounted) {
+          setFollowError(
+            apiError.message || '팔로우 상태를 확인하는 중 오류가 발생했습니다.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingFollowState(false)
+        }
+      }
+    }
+
+    if (!isOwnProfile && currentUser && urlUserId) {
+      fetchFollowState()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [isOwnProfile, currentUser, urlUserId, location.pathname])
+
   // TODO: 실제 사용자 데이터로 교체
   const userData = {
     name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
@@ -197,9 +254,43 @@ function Profile() {
     content: post.content,
   }))
 
-  const handleFollowToggle = () => {
-    setIsFollowing(prev => !prev)
-    // TODO: API 호출로 팔로우/언팔로우 처리
+  const handleFollowToggle = async () => {
+    // 자신의 프로필이거나, 현재 사용자나 대상 사용자가 없으면 처리하지 않음
+    if (isOwnProfile || !currentUser || !urlUserId || isTogglingFollow) return
+
+    let isMounted = true
+    setIsTogglingFollow(true)
+    setFollowError('')
+    try {
+      const response = await toggleFollow({
+        followerId: currentUser.USER_ID,
+        followingId: urlUserId,
+      })
+      if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+      if (response.result) {
+        if (isMounted) {
+          setIsFollowing(response.following)
+        }
+      } else {
+        if (isMounted) {
+          setFollowError(response.message || '팔로우 처리에 실패했습니다.')
+        }
+      }
+    } catch (error) {
+      if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+      const apiError = handleApiError(error)
+      if (isMounted) {
+        setFollowError(
+          apiError.message || '팔로우 처리 중 오류가 발생했습니다.'
+        )
+      }
+    } finally {
+      if (isMounted) {
+        setIsTogglingFollow(false)
+      }
+    }
   }
 
   return (
@@ -212,6 +303,9 @@ function Profile() {
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
           onFollowToggle={handleFollowToggle}
+          isTogglingFollow={isTogglingFollow}
+          isLoadingFollowState={isLoadingFollowState}
+          followError={followError}
         />
         <ProfileStats
           totalLikes={userData.stats.totalLikes}
