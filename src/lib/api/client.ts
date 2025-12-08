@@ -4,7 +4,7 @@ import { getStorageItem, removeStorageItem } from '@/lib/utils/storage'
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // ✅
-  withCredentials: true, // 쿠키 포함
+  withCredentials: import.meta.env.PROD, // 프로덕션에서만 쿠키 포함
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
