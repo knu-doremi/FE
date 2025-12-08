@@ -311,15 +311,18 @@ function Profile() {
       if (response.result) {
         if (isMounted) {
           setIsFollowing(response.following)
-          // 팔로우 상태 변경 시 팔로워/팔로잉 수 다시 조회
-          const targetUserId = urlUserId || currentUser?.USER_ID
-          if (targetUserId) {
-            const followCountResponse = await getFollowCount({
-              userId: targetUserId,
-            })
-            if (followCountResponse.result && isMounted) {
-              setFollowers(followCountResponse.followers)
-              setFollowing(followCountResponse.following)
+          // 팔로우 상태 변경 시 대상 사용자의 팔로워/팔로잉 수 다시 조회
+          if (urlUserId) {
+            try {
+              const followCountResponse = await getFollowCount({
+                userId: urlUserId,
+              })
+              if (followCountResponse.result && isMounted) {
+                setFollowers(followCountResponse.followers)
+                setFollowing(followCountResponse.following)
+              }
+            } catch (error) {
+              // 팔로워/팔로잉 수 갱신 실패는 무시 (이미 표시된 값 유지)
             }
           }
         }
