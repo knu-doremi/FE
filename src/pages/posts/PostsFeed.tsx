@@ -61,13 +61,19 @@ function PostsFeed() {
 
   // 추천 게시물 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchRecommendedPosts = async () => {
       if (!currentUser) return
 
-      setIsLoadingRecommended(true)
-      setRecommendedError('')
+      if (isMounted) {
+        setIsLoadingRecommended(true)
+        setRecommendedError('')
+      }
       try {
         const response = await getRecommendedPosts(currentUser.USER_ID)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
@@ -98,29 +104,43 @@ function PostsFeed() {
           setRecommendedError('추천 게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setRecommendedError(
           apiError.message || '추천 게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingRecommended(false)
+        if (isMounted) {
+          setIsLoadingRecommended(false)
+        }
       }
     }
 
     if (activeTab === 'recommended' && currentUser) {
       fetchRecommendedPosts()
     }
+
+    return () => {
+      isMounted = false
+    }
   }, [activeTab, currentUser])
 
   // 팔로잉 게시물 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchFollowingPosts = async () => {
       if (!currentUser) return
 
-      setIsLoadingFollowing(true)
-      setFollowingError('')
+      if (isMounted) {
+        setIsLoadingFollowing(true)
+        setFollowingError('')
+      }
       try {
         const response = await getFollowingPosts(currentUser.USER_ID)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
@@ -151,17 +171,25 @@ function PostsFeed() {
           setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setFollowingError(
           apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingFollowing(false)
+        if (isMounted) {
+          setIsLoadingFollowing(false)
+        }
       }
     }
 
     if (activeTab === 'following' && currentUser) {
       fetchFollowingPosts()
+    }
+
+    return () => {
+      isMounted = false
     }
   }, [activeTab, currentUser])
 
