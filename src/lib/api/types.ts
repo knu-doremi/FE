@@ -275,6 +275,51 @@ export interface ToggleBookmarkResponse {
   message?: string
 }
 
+// ===== 좋아요 관련 타입 =====
+
+// 좋아요 상태 확인 요청
+export interface CheckLikeStatusRequest {
+  postId: number
+  userId: string
+}
+
+// 좋아요 상태 확인 응답
+export interface CheckLikeStatusResponse {
+  result: boolean
+  postId: number
+  userId: string
+  isLiked: boolean
+  message?: string
+}
+
+// 좋아요 토글 요청
+export interface ToggleLikeRequest {
+  POST_ID: number
+  USER_ID: string
+}
+
+// 좋아요 토글 응답
+export interface ToggleLikeResponse {
+  result: boolean
+  postId: number
+  userId: string
+  isLiked: boolean
+  message?: string
+}
+
+// 총 좋아요 수 조회 요청
+export interface GetTotalLikesRequest {
+  userId: string
+}
+
+// 총 좋아요 수 조회 응답
+export interface GetTotalLikesResponse {
+  result: boolean
+  userId: string
+  totalLikes: number
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {

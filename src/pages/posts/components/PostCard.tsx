@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, MessageCircle, Bookmark, User } from 'lucide-react'
 import { checkBookmark, addBookmark, deleteBookmark } from '@/lib/api/bookmarks'
+import { checkLikeStatus, toggleLike } from '@/lib/api/likes'
 import { getStorageItem } from '@/lib/utils/storage'
 import { handleApiError } from '@/lib/api/types'
 import type { LoginUser } from '@/lib/api/types'
@@ -27,6 +28,9 @@ function PostCard({ post }: PostCardProps) {
   const navigate = useNavigate()
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false)
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
+  const [isLiked, setIsLiked] = useState(post.isLiked || false)
+  const [likeCount, setLikeCount] = useState(post.likes)
+  const [isTogglingLike, setIsTogglingLike] = useState(false)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -71,9 +75,53 @@ function PostCard({ post }: PostCardProps) {
     }
   }, [currentUser, post.id])
 
-  const handleLikeClick = (e: React.MouseEvent) => {
+  // 좋아요 상태 확인
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchLikeStatus = async () => {
+      if (!currentUser || !post.id) return
+
+      try {
+        const response = await checkLikeStatus(post.id, currentUser.USER_ID)
+        if (isMounted && response.result) {
+          setIsLiked(response.isLiked)
+        }
+      } catch (error) {
+        // 좋아요 상태 확인 실패 시 무시 (기본값 유지)
+      }
+    }
+
+    if (currentUser) {
+      fetchLikeStatus()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, post.id])
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    // TODO: 좋아요 토글 로직
+    if (!currentUser || isTogglingLike) return
+
+    let isMounted = true
+    setIsTogglingLike(true)
+    try {
+      const response = await toggleLike(post.id, currentUser.USER_ID)
+      if (isMounted && response.result) {
+        setIsLiked(response.isLiked)
+        // 좋아요 수 업데이트
+        setLikeCount(prev => (response.isLiked ? prev + 1 : Math.max(0, prev - 1)))
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      console.error('좋아요 토글 실패:', apiError.message)
+    } finally {
+      if (isMounted) {
+        setIsTogglingLike(false)
+      }
+    }
   }
 
   const handleBookmarkClick = async (e: React.MouseEvent) => {
@@ -197,17 +245,18 @@ function PostCard({ post }: PostCardProps) {
           <div className="flex items-center gap-4">
             <button
               onClick={handleLikeClick}
-              className="flex cursor-pointer items-center gap-1 rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10"
+              disabled={isTogglingLike || !currentUser}
+              className="flex cursor-pointer items-center gap-1 rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Heart
                 size={20}
                 style={{
-                  color: post.isLiked ? '#EF4444' : '#9CA3AF',
+                  color: isLiked ? '#EF4444' : '#9CA3AF',
                 }}
-                fill={post.isLiked ? '#EF4444' : 'none'}
+                fill={isLiked ? '#EF4444' : 'none'}
               />
               <span className="text-sm text-gray-600 lg:text-base">
-                {post.likes}
+                {likeCount}
               </span>
             </button>
 
