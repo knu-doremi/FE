@@ -571,7 +571,7 @@ function PostDetail() {
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-900">
-                              {comment.USER_ID}
+                              {comment.username || comment.USER_ID}
                             </p>
                             <p
                               className="text-xs"
@@ -737,7 +737,7 @@ function PostDetail() {
                                   </div>
                                   <div>
                                     <p className="text-xs font-semibold text-gray-900">
-                                      {reply.USER_ID}
+                                      {reply.username || reply.USER_ID}
                                     </p>
                                     <p
                                       className="text-xs"
