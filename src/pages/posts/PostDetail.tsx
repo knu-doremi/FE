@@ -607,7 +607,6 @@ function PostDetail() {
                             fill={isBookmarked ? '#B9BDDE' : 'none'}
                           />
                         </Button>
-                        <span className="text-sm text-gray-600">북마크</span>
                       </div>
                     )}
                   </div>
