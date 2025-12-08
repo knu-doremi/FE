@@ -90,6 +90,7 @@ export interface Comment {
   POST_ID: number
   USER_ID: string
   TEXT: string
+  username?: string // 사용자 이름 (API 응답에 포함될 수 있음)
   replies?: Comment[] // 답글 배열 (부모 댓글인 경우에만 존재)
 }
 

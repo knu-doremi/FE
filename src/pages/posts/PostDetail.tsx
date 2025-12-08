@@ -61,13 +61,19 @@ function PostDetail() {
 
   // 게시물 상세 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchPost = async () => {
       if (!postId) return
 
-      setIsLoadingPost(true)
-      setPostError('')
+      if (isMounted) {
+        setIsLoadingPost(true)
+        setPostError('')
+      }
       try {
         const response = await getPost(parseInt(postId))
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.post) {
           setPost(response.post)
 
@@ -82,16 +88,24 @@ function PostDetail() {
           setPostError('게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setPostError(
           apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingPost(false)
+        if (isMounted) {
+          setIsLoadingPost(false)
+        }
       }
     }
 
     fetchPost()
+
+    return () => {
+      isMounted = false
+    }
   }, [postId])
 
   // 게시물 해시태그 목록 조회
@@ -108,7 +122,7 @@ function PostDetail() {
     }
   }
 
-  // 댓글 목록 조회
+  // 댓글 목록 조회 함수
   const fetchComments = async () => {
     if (!postId) return
 
@@ -131,8 +145,45 @@ function PostDetail() {
     }
   }
 
+  // 댓글 목록 조회
   useEffect(() => {
-    fetchComments()
+    let isMounted = true
+
+    const fetchCommentsWithMountCheck = async () => {
+      if (!postId) return
+
+      if (isMounted) {
+        setIsLoadingComments(true)
+        setCommentsError('')
+      }
+      try {
+        const response = await getComments(parseInt(postId))
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result && response.comments) {
+          setComments(response.comments)
+        } else {
+          setCommentsError('댓글을 불러올 수 없습니다.')
+        }
+      } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        const apiError = handleApiError(error)
+        setCommentsError(
+          apiError.message || '댓글을 불러오는 중 오류가 발생했습니다.'
+        )
+      } finally {
+        if (isMounted) {
+          setIsLoadingComments(false)
+        }
+      }
+    }
+
+    fetchCommentsWithMountCheck()
+
+    return () => {
+      isMounted = false
+    }
   }, [postId])
 
   // 댓글 작성
@@ -570,9 +621,19 @@ function PostDetail() {
                             />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {comment.USER_ID}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {comment.username || comment.USER_ID}
+                              </p>
+                              <p
+                                className="text-xs"
+                                style={{
+                                  color: '#6B7280',
+                                }}
+                              >
+                                @{comment.USER_ID}
+                              </p>
+                            </div>
                             <p
                               className="text-xs"
                               style={{
@@ -736,9 +797,19 @@ function PostDetail() {
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-xs font-semibold text-gray-900">
-                                      {reply.USER_ID}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-xs font-semibold text-gray-900">
+                                        {reply.username || reply.USER_ID}
+                                      </p>
+                                      <p
+                                        className="text-xs"
+                                        style={{
+                                          color: '#6B7280',
+                                        }}
+                                      >
+                                        @{reply.USER_ID}
+                                      </p>
+                                    </div>
                                     <p
                                       className="text-xs"
                                       style={{
