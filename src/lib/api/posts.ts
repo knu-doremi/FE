@@ -68,7 +68,10 @@ export async function createPost(
   formData.append('user_id', data.user_id)
   formData.append('content', data.content)
   formData.append('hashtags', data.hashtags)
-  formData.append('image', data.image)
+  // 이미지가 있을 때만 추가
+  if (data.image) {
+    formData.append('image', data.image)
+  }
 
   const response = await apiClient.post<CreatePostResponse>(
     '/posts',

@@ -6,6 +6,7 @@ import { getRecommendedPosts, getFollowingPosts, getPost } from '@/lib/api/posts
 import {
   searchPostsByHashtag,
   getHashtagAutocomplete,
+  getPostHashtags,
 } from '@/lib/api/hashtags'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
@@ -60,13 +61,19 @@ function PostsFeed() {
 
   // 추천 게시물 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchRecommendedPosts = async () => {
       if (!currentUser) return
 
-      setIsLoadingRecommended(true)
-      setRecommendedError('')
+      if (isMounted) {
+        setIsLoadingRecommended(true)
+        setRecommendedError('')
+      }
       try {
         const response = await getRecommendedPosts(currentUser.USER_ID)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
@@ -97,29 +104,43 @@ function PostsFeed() {
           setRecommendedError('추천 게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setRecommendedError(
           apiError.message || '추천 게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingRecommended(false)
+        if (isMounted) {
+          setIsLoadingRecommended(false)
+        }
       }
     }
 
     if (activeTab === 'recommended' && currentUser) {
       fetchRecommendedPosts()
     }
+
+    return () => {
+      isMounted = false
+    }
   }, [activeTab, currentUser])
 
   // 팔로잉 게시물 조회
   useEffect(() => {
+    let isMounted = true
+
     const fetchFollowingPosts = async () => {
       if (!currentUser) return
 
-      setIsLoadingFollowing(true)
-      setFollowingError('')
+      if (isMounted) {
+        setIsLoadingFollowing(true)
+        setFollowingError('')
+      }
       try {
         const response = await getFollowingPosts(currentUser.USER_ID)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         if (response.result && response.posts) {
           // API 응답을 PostCard 형식으로 변환
           const transformedPosts: PostCardData[] = response.posts.map(
@@ -150,17 +171,25 @@ function PostsFeed() {
           setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
         }
       } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
         const apiError = handleApiError(error)
         setFollowingError(
           apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
         )
       } finally {
-        setIsLoadingFollowing(false)
+        if (isMounted) {
+          setIsLoadingFollowing(false)
+        }
       }
     }
 
     if (activeTab === 'following' && currentUser) {
       fetchFollowingPosts()
+    }
+
+    return () => {
+      isMounted = false
     }
   }, [activeTab, currentUser])
 
@@ -228,25 +257,43 @@ function PostsFeed() {
 
         const uniquePosts = Array.from(allPostsMap.values())
 
-        // 4. imageDir이 없는 게시물의 이미지 정보 가져오기
+        // 4. imageDir이 없는 게시물의 이미지 정보 및 해시태그 정보 가져오기
         const postsWithImages = await Promise.all(
           uniquePosts.map(async (post: Post) => {
+            let updatedPost = { ...post }
+
             // imageDir이 없거나 null인 경우 게시물 상세 API로 이미지 정보 가져오기
             if (!post.imageDir) {
               try {
                 const postDetail = await getPost(post.postId)
                 if (!isMounted) return post // 컴포넌트가 언마운트되었으면 원본 반환
                 if (postDetail.result && postDetail.post) {
-                  return {
-                    ...post,
-                    imageDir: postDetail.post.imageDir || post.imageDir,
+                  updatedPost.imageDir =
+                    postDetail.post.imageDir || post.imageDir
+                  // 게시물 상세 API 응답에 해시태그가 있으면 사용
+                  if (postDetail.post.hashtags) {
+                    updatedPost.hashtags = postDetail.post.hashtags
                   }
                 }
               } catch {
                 // 게시물 상세 조회 실패 시 원본 게시물 사용
               }
             }
-            return post
+
+            // 해시태그가 없으면 해시태그 API로 가져오기
+            if (!updatedPost.hashtags || updatedPost.hashtags.length === 0) {
+              try {
+                const hashtagsResponse = await getPostHashtags(post.postId)
+                if (!isMounted) return updatedPost
+                if (hashtagsResponse.result && hashtagsResponse.hashtags) {
+                  updatedPost.hashtags = hashtagsResponse.hashtags
+                }
+              } catch {
+                // 해시태그 조회 실패 시 원본 게시물 사용
+              }
+            }
+
+            return updatedPost
           })
         )
 

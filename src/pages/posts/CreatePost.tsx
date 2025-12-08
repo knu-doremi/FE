@@ -28,9 +28,7 @@ function validateCreatePostForm(data: {
     errors.content = '내용을 입력해주세요.'
   }
 
-  if (!data.image) {
-    errors.image = '이미지를 선택해주세요.'
-  }
+  // 이미지는 선택 사항이므로 검증 제거
 
   return errors
 }
@@ -126,8 +124,7 @@ function CreatePost() {
 
     if (
       Object.keys(validationErrors).length === 0 &&
-      currentUser &&
-      formData.image
+      currentUser
     ) {
       setIsSubmitting(true)
       try {
@@ -138,7 +135,7 @@ function CreatePost() {
           user_id: currentUser.USER_ID,
           content: formData.content,
           hashtags: hashtagsString,
-          image: formData.image,
+          image: formData.image || undefined,
         })
 
         if (response.result) {
