@@ -246,8 +246,8 @@ function Profile() {
 
         if (response.result) {
           if (isMounted) {
-            setFollowers(response.followers)
-            setFollowing(response.following)
+            setFollowers(response.followerCount)
+            setFollowing(response.followingCount)
           }
         }
         // 팔로워/팔로잉 수 조회 실패 시 기본값(0) 유지
@@ -318,8 +318,8 @@ function Profile() {
                 userId: urlUserId,
               })
               if (followCountResponse.result && isMounted) {
-                setFollowers(followCountResponse.followers)
-                setFollowing(followCountResponse.following)
+                setFollowers(followCountResponse.followerCount)
+                setFollowing(followCountResponse.followingCount)
               }
             } catch (error) {
               // 팔로워/팔로잉 수 갱신 실패는 무시 (이미 표시된 값 유지)

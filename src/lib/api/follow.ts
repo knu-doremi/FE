@@ -38,13 +38,13 @@ export async function checkFollowState(
 
 /**
  * 팔로워/팔로잉 수 조회 API
- * POST /api/follow/count
+ * POST /api/follow/counts (요청에 userId 포함)
  */
 export async function getFollowCount(
   data: GetFollowCountRequest
 ): Promise<GetFollowCountResponse> {
   const response = await apiClient.post<GetFollowCountResponse>(
-    '/follow/count',
+    '/follow/counts',
     data
   )
   return response.data

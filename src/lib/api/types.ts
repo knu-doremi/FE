@@ -356,9 +356,8 @@ export interface GetFollowCountRequest {
 // 팔로워/팔로잉 수 조회 응답
 export interface GetFollowCountResponse {
   result: boolean
-  userId: string
-  followers: number // 팔로워 수
-  following: number // 팔로잉 수
+  followerCount: number // 팔로워 수
+  followingCount: number // 팔로잉 수
   message?: string
 }
 
