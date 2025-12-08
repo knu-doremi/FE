@@ -235,6 +235,46 @@ export interface GetPostHashtagsResponse {
   message?: string
 }
 
+// ===== 북마크 관련 타입 =====
+
+// 북마크 확인 요청
+export interface CheckBookmarkRequest {
+  postId: number
+  userId: string
+}
+
+// 북마크 확인 응답
+export interface CheckBookmarkResponse {
+  result: boolean
+  isBookmarked: boolean
+  message?: string
+}
+
+// 북마크 목록 조회 요청
+export interface GetBookmarksRequest {
+  userId: string
+}
+
+// 북마크 목록 조회 응답
+export interface GetBookmarksResponse {
+  result: boolean
+  count: number
+  posts: Post[]
+  message?: string
+}
+
+// 북마크 추가/삭제 요청
+export interface ToggleBookmarkRequest {
+  postId: number
+  userId: string
+}
+
+// 북마크 추가/삭제 응답
+export interface ToggleBookmarkResponse {
+  result: boolean
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {
