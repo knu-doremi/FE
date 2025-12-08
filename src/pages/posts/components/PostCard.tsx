@@ -229,9 +229,9 @@ function PostCard({ post }: PostCardProps) {
         {/* 해시태그 */}
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
-            {post.hashtags.map(tag => (
+            {post.hashtags.map((tag, index) => (
               <span
-                key={tag}
+                key={`${post.id}-${tag}-${index}`}
                 className="rounded-full bg-[#B9BDDE] px-2 py-1 text-xs text-white lg:px-3 lg:text-sm"
               >
                 #{tag}
