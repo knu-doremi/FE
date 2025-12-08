@@ -1,10 +1,7 @@
 import apiClient from './client'
 import {
-  type CheckLikeStatusRequest,
   type CheckLikeStatusResponse,
-  type ToggleLikeRequest,
   type ToggleLikeResponse,
-  type GetTotalLikesRequest,
   type GetTotalLikesResponse,
 } from './types'
 
