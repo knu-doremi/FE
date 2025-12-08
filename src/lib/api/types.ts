@@ -179,7 +179,7 @@ export interface CreatePostRequest {
   user_id: string
   content: string
   hashtags: string // 쉼표로 구분된 문자열 (예: "고양이, 귀여움")
-  image: File
+  image?: File
 }
 
 // 게시물 작성 응답

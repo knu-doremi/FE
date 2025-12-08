@@ -53,7 +53,6 @@ function CreatePost() {
   const [hashtagSuggestions, setHashtagSuggestions] = useState<
     Array<{ hashtagName: string; postCount: number }>
   >([])
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   // 현재 사용자 정보 가져오기
@@ -71,7 +70,7 @@ function CreatePost() {
 
   // 해시태그 자동완성 API 호출
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout | null = null
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
     const fetchSuggestions = async () => {
       const trimmedInput = hashtagInput.trim().replace(/^#/, '')
@@ -82,7 +81,6 @@ function CreatePost() {
         return
       }
 
-      setIsLoadingSuggestions(true)
       try {
         const response = await getHashtagAutocomplete(trimmedInput, 5)
         if (response.result && response.hashtags) {
@@ -97,7 +95,6 @@ function CreatePost() {
         setHashtagSuggestions([])
         setShowSuggestions(false)
       } finally {
-        setIsLoadingSuggestions(false)
       }
     }
 

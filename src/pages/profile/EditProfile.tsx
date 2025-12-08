@@ -5,10 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import FormErrorMessage from '../auth/components/FormErrorMessage'
-import {
-  validateLoginForm,
-  type LoginFormErrors,
-} from '../auth/utils/validation'
 import logoImage from '@/assets/images/doremi-logo.png'
 
 interface EditProfileErrors {
