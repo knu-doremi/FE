@@ -8,6 +8,7 @@ import PostGrid from './components/PostGrid'
 import BottomNavigation from './components/BottomNavigation'
 import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
+import { getTotalLikes } from '@/lib/api/likes'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -25,6 +26,7 @@ function Profile() {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([])
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
   const [bookmarksError, setBookmarksError] = useState<string>('')
+  const [totalLikes, setTotalLikes] = useState<number>(0)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -135,6 +137,38 @@ function Profile() {
     }
   }, [isOwnProfile, currentUser, location.pathname])
 
+  // 총 좋아요 수 조회
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchTotalLikes = async () => {
+      // 표시할 사용자 ID 결정 (urlUserId가 있으면 해당 사용자, 없으면 현재 로그인한 사용자)
+      const targetUserId = urlUserId || currentUser?.USER_ID
+      if (!targetUserId) return
+
+      try {
+        const response = await getTotalLikes(targetUserId)
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result) {
+          if (isMounted) {
+            setTotalLikes(response.totalLikes)
+          }
+        }
+      } catch (error) {
+        // 총 좋아요 수 조회 실패 시 무시 (기본값 유지)
+      }
+    }
+
+    if (urlUserId || currentUser) {
+      fetchTotalLikes()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, currentUser, location.pathname])
+
   // TODO: 실제 사용자 데이터로 교체
   const userData = {
     name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
@@ -142,7 +176,7 @@ function Profile() {
     gender: 'female' as const,
     birthDate: '2000-01-01',
     stats: {
-      totalLikes: 4500,
+      totalLikes: totalLikes,
       followers: 4500,
       following: 88,
       posts: 123,
