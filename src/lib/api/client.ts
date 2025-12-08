@@ -1,14 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 import { getStorageItem, removeStorageItem } from '@/lib/utils/storage'
 
-// API 기본 URL
-// 개발 환경에서는 Vite 프록시를 사용하므로 상대 경로 사용
-// 프로덕션에서는 환경 변수로 설정된 절대 경로 사용
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL, // ✅
+  withCredentials: true, // 쿠키 포함
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
