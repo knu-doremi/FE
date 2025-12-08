@@ -13,6 +13,7 @@ import {
 import { getPost, deletePost } from '@/lib/api/posts'
 import { getPostHashtags } from '@/lib/api/hashtags'
 import { checkBookmark, addBookmark, deleteBookmark } from '@/lib/api/bookmarks'
+import { checkLikeStatus, toggleLike } from '@/lib/api/likes'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -48,6 +49,9 @@ function PostDetail() {
   const [postHashtags, setPostHashtags] = useState<PostHashtag[]>([])
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [isTogglingLike, setIsTogglingLike] = useState(false)
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -79,6 +83,7 @@ function PostDetail() {
 
         if (response.result && response.post) {
           setPost(response.post)
+          setLikeCount(response.post.likeCount || 0)
 
           // 게시물 응답에 해시태그가 없거나 비어있으면 별도 API로 조회
           if (!response.post.hashtags || response.post.hashtags.length === 0) {
@@ -147,6 +152,35 @@ function PostDetail() {
 
     if (currentUser && postId) {
       fetchBookmarkStatus()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, postId])
+
+  // 좋아요 상태 확인
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchLikeStatus = async () => {
+      if (!currentUser || !postId) return
+
+      try {
+        const response = await checkLikeStatus(
+          parseInt(postId),
+          currentUser.USER_ID
+        )
+        if (isMounted && response.result) {
+          setIsLiked(response.isLiked)
+        }
+      } catch (error) {
+        // 좋아요 상태 확인 실패 시 무시 (기본값 유지)
+      }
+    }
+
+    if (currentUser && postId) {
+      fetchLikeStatus()
     }
 
     return () => {
@@ -340,6 +374,29 @@ function PostDetail() {
       }))
     } finally {
       setIsDeletingComment(prev => ({ ...prev, [commentId]: false }))
+    }
+  }
+
+  // 좋아요 토글
+  const handleToggleLike = async () => {
+    if (!currentUser || !postId || isTogglingLike) return
+
+    let isMounted = true
+    setIsTogglingLike(true)
+    try {
+      const response = await toggleLike(parseInt(postId), currentUser.USER_ID)
+      if (isMounted && response.result) {
+        setIsLiked(response.isLiked)
+        // 좋아요 수 업데이트
+        setLikeCount(prev => (response.isLiked ? prev + 1 : Math.max(0, prev - 1)))
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      console.error('좋아요 토글 실패:', apiError.message)
+    } finally {
+      if (isMounted) {
+        setIsTogglingLike(false)
+      }
     }
   }
 
@@ -577,20 +634,19 @@ function PostDetail() {
                         variant="ghost"
                         size="icon"
                         className="cursor-pointer"
-                        onClick={() => {
-                          // TODO: 좋아요 토글 로직
-                        }}
+                        onClick={handleToggleLike}
+                        disabled={isTogglingLike || !currentUser}
                       >
                         <Heart
                           size={20}
                           style={{
-                            color: '#EF4444',
+                            color: isLiked ? '#EF4444' : '#9CA3AF',
                           }}
-                          fill="#EF4444"
+                          fill={isLiked ? '#EF4444' : 'none'}
                         />
                       </Button>
                       <span className="font-medium text-gray-900">
-                        {post.likeCount || 0}
+                        {likeCount}
                       </span>
                     </div>
                     {currentUser && (
