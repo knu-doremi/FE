@@ -1,5 +1,10 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, MessageCircle, Bookmark, User } from 'lucide-react'
+import { checkBookmark, addBookmark, deleteBookmark } from '@/lib/api/bookmarks'
+import { getStorageItem } from '@/lib/utils/storage'
+import { handleApiError } from '@/lib/api/types'
+import type { LoginUser } from '@/lib/api/types'
 
 interface PostCardProps {
   post: {
@@ -20,15 +25,92 @@ interface PostCardProps {
 
 function PostCard({ post }: PostCardProps) {
   const navigate = useNavigate()
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false)
+  const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
+
+  // 북마크 상태 확인
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchBookmarkStatus = async () => {
+      if (!currentUser || !post.id) return
+
+      try {
+        const response = await checkBookmark({
+          postId: post.id,
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(response.isBookmarked)
+        }
+      } catch (error) {
+        // 북마크 상태 확인 실패 시 무시 (기본값 유지)
+      }
+    }
+
+    if (currentUser) {
+      fetchBookmarkStatus()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, post.id])
 
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     // TODO: 좋아요 토글 로직
   }
 
-  const handleBookmarkClick = (e: React.MouseEvent) => {
+  const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    // TODO: 북마크 토글 로직
+    if (!currentUser || isTogglingBookmark) return
+
+    let isMounted = true
+    setIsTogglingBookmark(true)
+    try {
+      if (isBookmarked) {
+        // 북마크 삭제
+        const response = await deleteBookmark({
+          postId: post.id,
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(false)
+        }
+      } else {
+        // 북마크 추가
+        const response = await addBookmark({
+          postId: post.id,
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(true)
+        }
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      // 에러 발생 시 사용자에게 알림 (선택사항)
+      console.error('북마크 토글 실패:', apiError.message)
+    } finally {
+      if (isMounted) {
+        setIsTogglingBookmark(false)
+      }
+    }
   }
 
   const handleCommentClick = (e: React.MouseEvent) => {
@@ -148,14 +230,15 @@ function PostCard({ post }: PostCardProps) {
 
           <button
             onClick={handleBookmarkClick}
-            className="cursor-pointer rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10"
+            disabled={isTogglingBookmark || !currentUser}
+            className="cursor-pointer rounded-md p-1 transition-colors hover:bg-[#B9BDDE]/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Bookmark
               size={20}
               style={{
-                color: post.isBookmarked ? '#B9BDDE' : '#9CA3AF',
+                color: isBookmarked ? '#B9BDDE' : '#9CA3AF',
               }}
-              fill={post.isBookmarked ? '#B9BDDE' : 'none'}
+              fill={isBookmarked ? '#B9BDDE' : 'none'}
             />
           </button>
         </div>

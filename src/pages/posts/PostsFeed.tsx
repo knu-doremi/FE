@@ -195,7 +195,7 @@ function PostsFeed() {
 
   // 해시태그 검색 API 호출
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout | null = null
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let isMounted = true
 
     const fetchHashtagSearch = async () => {

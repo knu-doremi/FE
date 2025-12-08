@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Heart, ArrowLeft, User, Trash2 } from 'lucide-react'
+import { Heart, ArrowLeft, User, Trash2, Bookmark } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/comments'
 import { getPost, deletePost } from '@/lib/api/posts'
 import { getPostHashtags } from '@/lib/api/hashtags'
+import { checkBookmark, addBookmark, deleteBookmark } from '@/lib/api/bookmarks'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -45,6 +46,8 @@ function PostDetail() {
   const [isDeletingPost, setIsDeletingPost] = useState(false)
   const [deletePostError, setDeletePostError] = useState<string>('')
   const [postHashtags, setPostHashtags] = useState<PostHashtag[]>([])
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -121,6 +124,35 @@ function PostDetail() {
       console.warn('해시태그 조회 실패:', apiError.message)
     }
   }
+
+  // 북마크 상태 확인
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchBookmarkStatus = async () => {
+      if (!currentUser || !postId) return
+
+      try {
+        const response = await checkBookmark({
+          postId: parseInt(postId),
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(response.isBookmarked)
+        }
+      } catch (error) {
+        // 북마크 상태 확인 실패 시 무시 (기본값 유지)
+      }
+    }
+
+    if (currentUser && postId) {
+      fetchBookmarkStatus()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, postId])
 
   // 댓글 목록 조회 함수
   const fetchComments = async () => {
@@ -311,6 +343,43 @@ function PostDetail() {
     }
   }
 
+  // 북마크 토글
+  const handleToggleBookmark = async () => {
+    if (!currentUser || !postId || isTogglingBookmark) return
+
+    let isMounted = true
+    setIsTogglingBookmark(true)
+    try {
+      if (isBookmarked) {
+        // 북마크 삭제
+        const response = await deleteBookmark({
+          postId: parseInt(postId),
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(false)
+        }
+      } else {
+        // 북마크 추가
+        const response = await addBookmark({
+          postId: parseInt(postId),
+          userId: currentUser.USER_ID,
+        })
+        if (isMounted && response.result) {
+          setIsBookmarked(true)
+        }
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      // 에러 발생 시 사용자에게 알림 (선택사항)
+      console.error('북마크 토글 실패:', apiError.message)
+    } finally {
+      if (isMounted) {
+        setIsTogglingBookmark(false)
+      }
+    }
+  }
+
   // 게시물 삭제
   const handleDeletePost = async () => {
     if (!post || !currentUser || !postId) return
@@ -492,7 +561,7 @@ function PostDetail() {
                   </div>
                 ) : null}
 
-                {/* 좋아요 */}
+                {/* 좋아요 및 북마크 */}
                 <div className="space-y-2">
                   <Label
                     className="text-sm font-medium"
@@ -502,26 +571,47 @@ function PostDetail() {
                   >
                     좋아요
                   </Label>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="cursor-pointer"
-                      onClick={() => {
-                        // TODO: 좋아요 토글 로직
-                      }}
-                    >
-                      <Heart
-                        size={20}
-                        style={{
-                          color: '#EF4444',
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="cursor-pointer"
+                        onClick={() => {
+                          // TODO: 좋아요 토글 로직
                         }}
-                        fill="#EF4444"
-                      />
-                    </Button>
-                    <span className="font-medium text-gray-900">
-                      {post.likeCount || 0}
-                    </span>
+                      >
+                        <Heart
+                          size={20}
+                          style={{
+                            color: '#EF4444',
+                          }}
+                          fill="#EF4444"
+                        />
+                      </Button>
+                      <span className="font-medium text-gray-900">
+                        {post.likeCount || 0}
+                      </span>
+                    </div>
+                    {currentUser && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="cursor-pointer"
+                          onClick={handleToggleBookmark}
+                          disabled={isTogglingBookmark}
+                        >
+                          <Bookmark
+                            size={20}
+                            style={{
+                              color: isBookmarked ? '#B9BDDE' : '#9CA3AF',
+                            }}
+                            fill={isBookmarked ? '#B9BDDE' : 'none'}
+                          />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

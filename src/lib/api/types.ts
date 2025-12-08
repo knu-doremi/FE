@@ -179,7 +179,7 @@ export interface CreatePostRequest {
   user_id: string
   content: string
   hashtags: string // 쉼표로 구분된 문자열 (예: "고양이, 귀여움")
-  image: File
+  image?: File
 }
 
 // 게시물 작성 응답
@@ -232,6 +232,46 @@ export interface GetPostHashtagsResponse {
   result: boolean
   postId: number
   hashtags: PostHashtag[]
+  message?: string
+}
+
+// ===== 북마크 관련 타입 =====
+
+// 북마크 확인 요청
+export interface CheckBookmarkRequest {
+  postId: number
+  userId: string
+}
+
+// 북마크 확인 응답
+export interface CheckBookmarkResponse {
+  result: boolean
+  isBookmarked: boolean
+  message?: string
+}
+
+// 북마크 목록 조회 요청
+export interface GetBookmarksRequest {
+  userId: string
+}
+
+// 북마크 목록 조회 응답
+export interface GetBookmarksResponse {
+  result: boolean
+  count: number
+  posts: Post[]
+  message?: string
+}
+
+// 북마크 추가/삭제 요청
+export interface ToggleBookmarkRequest {
+  postId: number
+  userId: string
+}
+
+// 북마크 추가/삭제 응답
+export interface ToggleBookmarkResponse {
+  result: boolean
   message?: string
 }
 

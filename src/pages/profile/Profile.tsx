@@ -7,6 +7,7 @@ import ProfileTabs from './components/ProfileTabs'
 import PostGrid from './components/PostGrid'
 import BottomNavigation from './components/BottomNavigation'
 import { getPostsByUser } from '@/lib/api/posts'
+import { getBookmarks } from '@/lib/api/bookmarks'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -21,6 +22,9 @@ function Profile() {
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [postsError, setPostsError] = useState<string>('')
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([])
+  const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
+  const [bookmarksError, setBookmarksError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -80,6 +84,57 @@ function Profile() {
     }
   }, [urlUserId, currentUser, location.pathname])
 
+  // 북마크 목록 조회 (자신의 프로필일 때만)
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchBookmarks = async () => {
+      if (!isOwnProfile || !currentUser) return
+
+      if (isMounted) {
+        setIsLoadingBookmarks(true)
+        setBookmarksError('')
+      }
+      try {
+        const response = await getBookmarks({
+          userId: currentUser.USER_ID,
+        })
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result && response.posts) {
+          if (isMounted) {
+            setBookmarkedPosts(response.posts)
+          }
+        } else {
+          if (isMounted) {
+            setBookmarksError('북마크를 불러올 수 없습니다.')
+          }
+        }
+      } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        const apiError = handleApiError(error)
+        if (isMounted) {
+          setBookmarksError(
+            apiError.message || '북마크를 불러오는 중 오류가 발생했습니다.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingBookmarks(false)
+        }
+      }
+    }
+
+    if (isOwnProfile && currentUser) {
+      fetchBookmarks()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [isOwnProfile, currentUser, location.pathname])
+
   // TODO: 실제 사용자 데이터로 교체
   const userData = {
     name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
@@ -92,11 +147,17 @@ function Profile() {
       following: 88,
       posts: 123,
     },
-    bookmarkedPosts: [{ id: 4 }, { id: 5 }, { id: 6 }, { id: 7 }],
   }
 
   // PostGrid에 전달할 게시물 데이터 변환
   const postGridData = posts.map(post => ({
+    id: post.postId,
+    image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
+    content: post.content,
+  }))
+
+  // 북마크된 게시물을 PostGrid 형식으로 변환
+  const bookmarkedPostGridData = bookmarkedPosts.map(post => ({
     id: post.postId,
     image: post.imageDir ? getImageUrl(post.imageDir) : undefined,
     content: post.content,
@@ -147,7 +208,29 @@ function Profile() {
             )
           }
           savedContent={
-            <PostGrid posts={userData.bookmarkedPosts} showAddButton={false} />
+            isLoadingBookmarks ? (
+              <div className="py-12 text-center">
+                <p
+                  className="text-sm lg:text-base"
+                  style={{
+                    color: '#9CA3AF',
+                  }}
+                >
+                  북마크를 불러오는 중...
+                </p>
+              </div>
+            ) : bookmarksError ? (
+              <div className="py-12 text-center">
+                <p className="text-sm text-red-600 lg:text-base">
+                  {bookmarksError}
+                </p>
+              </div>
+            ) : (
+              <PostGrid
+                posts={bookmarkedPostGridData}
+                showAddButton={false}
+              />
+            )
           }
           showBookmarkTab={isOwnProfile}
         />
