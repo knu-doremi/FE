@@ -320,6 +320,47 @@ export interface GetTotalLikesResponse {
   message?: string
 }
 
+// ===== 팔로우 관련 타입 =====
+
+// 팔로우/언팔로우 요청
+export interface ToggleFollowRequest {
+  followingId: string // 팔로우할 대상 사용자 ID
+  followerId: string // 팔로우하는 사용자 ID (현재 로그인한 사용자)
+}
+
+// 팔로우/언팔로우 응답
+export interface ToggleFollowResponse {
+  result: boolean
+  following: boolean // true: 팔로우됨, false: 언팔로우됨
+  message?: string
+}
+
+// 팔로우 여부 확인 요청
+export interface CheckFollowStateRequest {
+  followingId: string // 확인할 대상 사용자 ID
+  followerId: string // 확인하는 사용자 ID (현재 로그인한 사용자)
+}
+
+// 팔로우 여부 확인 응답
+export interface CheckFollowStateResponse {
+  result: boolean
+  following: boolean // true: 팔로우 중, false: 팔로우 안 함
+  message?: string
+}
+
+// 팔로워/팔로잉 수 조회 요청
+export interface GetFollowCountRequest {
+  userId: string // 조회할 사용자 ID
+}
+
+// 팔로워/팔로잉 수 조회 응답
+export interface GetFollowCountResponse {
+  result: boolean
+  followerCount: number // 팔로워 수
+  followingCount: number // 팔로잉 수
+  message?: string
+}
+
 // 에러 처리 헬퍼 함수
 export function handleApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {

@@ -9,6 +9,7 @@ import BottomNavigation from './components/BottomNavigation'
 import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
 import { getTotalLikes } from '@/lib/api/likes'
+import { checkFollowState, toggleFollow, getFollowCount } from '@/lib/api/follow'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -20,6 +21,9 @@ function Profile() {
   const isOwnProfile = !urlUserId
 
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isLoadingFollowState, setIsLoadingFollowState] = useState(false)
+  const [isTogglingFollow, setIsTogglingFollow] = useState(false)
+  const [followError, setFollowError] = useState<string>('')
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [postsError, setPostsError] = useState<string>('')
@@ -27,6 +31,8 @@ function Profile() {
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
   const [bookmarksError, setBookmarksError] = useState<string>('')
   const [totalLikes, setTotalLikes] = useState<number>(0)
+  const [followers, setFollowers] = useState<number>(0)
+  const [following, setFollowing] = useState<number>(0)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -169,7 +175,98 @@ function Profile() {
     }
   }, [urlUserId, currentUser, location.pathname])
 
-  // TODO: 실제 사용자 데이터로 교체
+  // 팔로우 상태 확인 (다른 사용자 프로필일 때만)
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchFollowState = async () => {
+      // 자신의 프로필이거나, 현재 사용자나 대상 사용자가 없으면 조회하지 않음
+      if (isOwnProfile || !currentUser || !urlUserId) return
+
+      if (isMounted) {
+        setIsLoadingFollowState(true)
+        setFollowError('')
+      }
+      try {
+        const response = await checkFollowState({
+          followerId: currentUser.USER_ID,
+          followingId: urlUserId,
+        })
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result) {
+          if (isMounted) {
+            setIsFollowing(response.following)
+          }
+        } else {
+          if (isMounted) {
+            setFollowError('팔로우 상태를 확인할 수 없습니다.')
+          }
+        }
+      } catch (error) {
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        const apiError = handleApiError(error)
+        if (isMounted) {
+          setFollowError(
+            apiError.message || '팔로우 상태를 확인하는 중 오류가 발생했습니다.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingFollowState(false)
+        }
+      }
+    }
+
+    if (!isOwnProfile && currentUser && urlUserId) {
+      fetchFollowState()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [isOwnProfile, currentUser, urlUserId, location.pathname])
+
+  // 팔로워/팔로잉 수 조회
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchFollowCount = async () => {
+      // 표시할 사용자 ID 결정 (urlUserId가 있으면 해당 사용자, 없으면 현재 로그인한 사용자)
+      const targetUserId = urlUserId || currentUser?.USER_ID
+      if (!targetUserId) return
+
+      // 팔로워/팔로잉 수 조회 시작
+      try {
+        const response = await getFollowCount({
+          userId: targetUserId,
+        })
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result) {
+          if (isMounted) {
+            setFollowers(response.followerCount)
+            setFollowing(response.followingCount)
+          }
+        }
+        // 팔로워/팔로잉 수 조회 실패 시 기본값(0) 유지
+      } catch (error) {
+        // 팔로워/팔로잉 수 조회 실패 시 기본값(0) 유지
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+      }
+    }
+
+    if (urlUserId || currentUser) {
+      fetchFollowCount()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, currentUser, location.pathname])
+
+  // 사용자 데이터
   const userData = {
     name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
     userId: urlUserId || currentUser?.USER_ID || 'user_officials',
@@ -177,8 +274,8 @@ function Profile() {
     birthDate: '2000-01-01',
     stats: {
       totalLikes: totalLikes,
-      followers: 4500,
-      following: 88,
+      followers: followers,
+      following: following,
       posts: 123,
     },
   }
@@ -197,9 +294,57 @@ function Profile() {
     content: post.content,
   }))
 
-  const handleFollowToggle = () => {
-    setIsFollowing(prev => !prev)
-    // TODO: API 호출로 팔로우/언팔로우 처리
+  const handleFollowToggle = async () => {
+    // 자신의 프로필이거나, 현재 사용자나 대상 사용자가 없으면 처리하지 않음
+    if (isOwnProfile || !currentUser || !urlUserId || isTogglingFollow) return
+
+    let isMounted = true
+    setIsTogglingFollow(true)
+    setFollowError('')
+    try {
+      const response = await toggleFollow({
+        followerId: currentUser.USER_ID,
+        followingId: urlUserId,
+      })
+      if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+      if (response.result) {
+        if (isMounted) {
+          setIsFollowing(response.following)
+          // 팔로우 상태 변경 시 대상 사용자의 팔로워/팔로잉 수 다시 조회
+          if (urlUserId) {
+            try {
+              const followCountResponse = await getFollowCount({
+                userId: urlUserId,
+              })
+              if (followCountResponse.result && isMounted) {
+                setFollowers(followCountResponse.followerCount)
+                setFollowing(followCountResponse.followingCount)
+              }
+            } catch (error) {
+              // 팔로워/팔로잉 수 갱신 실패는 무시 (이미 표시된 값 유지)
+            }
+          }
+        }
+      } else {
+        if (isMounted) {
+          setFollowError(response.message || '팔로우 처리에 실패했습니다.')
+        }
+      }
+    } catch (error) {
+      if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+      const apiError = handleApiError(error)
+      if (isMounted) {
+        setFollowError(
+          apiError.message || '팔로우 처리 중 오류가 발생했습니다.'
+        )
+      }
+    } finally {
+      if (isMounted) {
+        setIsTogglingFollow(false)
+      }
+    }
   }
 
   return (
@@ -212,6 +357,9 @@ function Profile() {
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
           onFollowToggle={handleFollowToggle}
+          isTogglingFollow={isTogglingFollow}
+          isLoadingFollowState={isLoadingFollowState}
+          followError={followError}
         />
         <ProfileStats
           totalLikes={userData.stats.totalLikes}
