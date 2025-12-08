@@ -9,7 +9,7 @@ import BottomNavigation from './components/BottomNavigation'
 import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
 import { getTotalLikes } from '@/lib/api/likes'
-import { checkFollowState, toggleFollow } from '@/lib/api/follow'
+import { checkFollowState, toggleFollow, getFollowCount } from '@/lib/api/follow'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -31,6 +31,8 @@ function Profile() {
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
   const [bookmarksError, setBookmarksError] = useState<string>('')
   const [totalLikes, setTotalLikes] = useState<number>(0)
+  const [followers, setFollowers] = useState<number>(0)
+  const [following, setFollowing] = useState<number>(0)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
   // 현재 사용자 정보 가져오기
@@ -226,7 +228,45 @@ function Profile() {
     }
   }, [isOwnProfile, currentUser, urlUserId, location.pathname])
 
-  // TODO: 실제 사용자 데이터로 교체
+  // 팔로워/팔로잉 수 조회
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchFollowCount = async () => {
+      // 표시할 사용자 ID 결정 (urlUserId가 있으면 해당 사용자, 없으면 현재 로그인한 사용자)
+      const targetUserId = urlUserId || currentUser?.USER_ID
+      if (!targetUserId) return
+
+      // 팔로워/팔로잉 수 조회 시작
+      try {
+        const response = await getFollowCount({
+          userId: targetUserId,
+        })
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+
+        if (response.result) {
+          if (isMounted) {
+            setFollowers(response.followers)
+            setFollowing(response.following)
+          }
+        }
+        // 팔로워/팔로잉 수 조회 실패 시 기본값(0) 유지
+      } catch (error) {
+        // 팔로워/팔로잉 수 조회 실패 시 기본값(0) 유지
+        if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
+      }
+    }
+
+    if (urlUserId || currentUser) {
+      fetchFollowCount()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, currentUser, location.pathname])
+
+  // 사용자 데이터
   const userData = {
     name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
     userId: urlUserId || currentUser?.USER_ID || 'user_officials',
@@ -234,8 +274,8 @@ function Profile() {
     birthDate: '2000-01-01',
     stats: {
       totalLikes: totalLikes,
-      followers: 4500,
-      following: 88,
+      followers: followers,
+      following: following,
       posts: 123,
     },
   }
@@ -271,6 +311,17 @@ function Profile() {
       if (response.result) {
         if (isMounted) {
           setIsFollowing(response.following)
+          // 팔로우 상태 변경 시 팔로워/팔로잉 수 다시 조회
+          const targetUserId = urlUserId || currentUser?.USER_ID
+          if (targetUserId) {
+            const followCountResponse = await getFollowCount({
+              userId: targetUserId,
+            })
+            if (followCountResponse.result && isMounted) {
+              setFollowers(followCountResponse.followers)
+              setFollowing(followCountResponse.following)
+            }
+          }
         }
       } else {
         if (isMounted) {
