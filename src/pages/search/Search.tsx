@@ -4,6 +4,7 @@ import SearchHeader from './components/SearchHeader'
 import RecommendedUsers from './components/RecommendedUsers'
 import SearchResults from './components/SearchResults'
 import { getRecommendedUsers } from '@/lib/api/auth'
+import { checkFollowState, toggleFollow } from '@/lib/api/follow'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import type { LoginUser } from '@/lib/api/types'
@@ -22,6 +23,9 @@ function Search() {
     useState(false)
   const [recommendedUsersError, setRecommendedUsersError] = useState<string>('')
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [togglingFollowUserId, setTogglingFollowUserId] = useState<string | null>(
+    null
+  )
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -53,14 +57,38 @@ function Search() {
 
         if (response.result && response.users) {
           if (isMounted) {
-            // API 응답을 RecommendedUsers 컴포넌트 형식으로 변환
-            const formattedUsers = response.users.map((user, index) => ({
-              id: `recommended-${user.userId}-${index}`,
-              name: user.name,
-              userId: user.userId,
-              isFollowing: false, // 추천 유저는 기본적으로 팔로우하지 않은 상태
-            }))
-            setRecommendedUsers(formattedUsers)
+            // 각 추천 유저의 팔로우 상태 확인
+            const formattedUsersPromises = response.users.map(
+              async (user, index) => {
+                try {
+                  const followStateResponse = await checkFollowState({
+                    followerId: currentUser.USER_ID,
+                    followingId: user.userId,
+                  })
+                  return {
+                    id: `recommended-${user.userId}-${index}`,
+                    name: user.name,
+                    userId: user.userId,
+                    isFollowing: followStateResponse.result
+                      ? followStateResponse.following
+                      : false,
+                  }
+                } catch {
+                  // 팔로우 상태 확인 실패 시 기본값(false) 사용
+                  return {
+                    id: `recommended-${user.userId}-${index}`,
+                    name: user.name,
+                    userId: user.userId,
+                    isFollowing: false,
+                  }
+                }
+              }
+            )
+
+            const formattedUsers = await Promise.all(formattedUsersPromises)
+            if (isMounted) {
+              setRecommendedUsers(formattedUsers)
+            }
           }
         } else {
           if (isMounted) {
@@ -100,15 +128,37 @@ function Search() {
     return []
   }, [searchQuery])
 
-  const handleFollowToggle = (userId: string) => {
-    setRecommendedUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.userId === userId
-          ? { ...user, isFollowing: !user.isFollowing }
-          : user
-      )
-    )
-    // TODO: API 호출로 팔로우/언팔로우 처리
+  const handleFollowToggle = async (userId: string) => {
+    if (!currentUser || togglingFollowUserId === userId) return
+
+    let isMounted = true
+    setTogglingFollowUserId(userId)
+    try {
+      const response = await toggleFollow({
+        followerId: currentUser.USER_ID,
+        followingId: userId,
+      })
+      if (!isMounted) return
+
+      if (response.result) {
+        if (isMounted) {
+          setRecommendedUsers(prevUsers =>
+            prevUsers.map(user =>
+              user.userId === userId
+                ? { ...user, isFollowing: response.following }
+                : user
+            )
+          )
+        }
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      console.error('팔로우 토글 실패:', apiError.message)
+    } finally {
+      if (isMounted) {
+        setTogglingFollowUserId(null)
+      }
+    }
   }
 
   return (
@@ -157,6 +207,7 @@ function Search() {
               <RecommendedUsers
                 users={recommendedUsers}
                 onFollowToggle={handleFollowToggle}
+                togglingFollowUserId={togglingFollowUserId}
               />
             )}
           </>

@@ -12,9 +12,14 @@ interface User {
 interface RecommendedUsersProps {
   users: User[]
   onFollowToggle: (userId: string) => void
+  togglingFollowUserId?: string | null
 }
 
-function RecommendedUsers({ users, onFollowToggle }: RecommendedUsersProps) {
+function RecommendedUsers({
+  users,
+  onFollowToggle,
+  togglingFollowUserId,
+}: RecommendedUsersProps) {
   const navigate = useNavigate()
 
   if (users.length === 0) {
@@ -78,13 +83,18 @@ function RecommendedUsers({ users, onFollowToggle }: RecommendedUsersProps) {
             </div>
             <Button
               onClick={e => handleFollowClick(e, user.userId)}
-              className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors lg:px-6 lg:py-2.5 lg:text-base ${
+              disabled={togglingFollowUserId === user.userId}
+              className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:px-6 lg:py-2.5 lg:text-base ${
                 user.isFollowing
                   ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   : 'bg-[#B9BDDE] text-white hover:bg-[#9CA3D0]'
               }`}
             >
-              {user.isFollowing ? '팔로잉' : '팔로우'}
+              {togglingFollowUserId === user.userId
+                ? '처리 중...'
+                : user.isFollowing
+                  ? '팔로잉'
+                  : '팔로우'}
             </Button>
           </div>
         ))}
