@@ -1,75 +1,107 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import BottomNavigation from '../profile/components/BottomNavigation'
 import SearchHeader from './components/SearchHeader'
 import RecommendedUsers from './components/RecommendedUsers'
 import SearchResults from './components/SearchResults'
+import { getRecommendedUsers } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem } from '@/lib/utils/storage'
+import type { LoginUser } from '@/lib/api/types'
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [recommendedUsers, setRecommendedUsers] = useState<
+    Array<{
+      id: string
+      name: string
+      userId: string
+      isFollowing: boolean
+    }>
+  >([])
+  const [isLoadingRecommendedUsers, setIsLoadingRecommendedUsers] =
+    useState(false)
+  const [recommendedUsersError, setRecommendedUsersError] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
-  // TODO: 실제 추천 사용자 데이터로 교체
-  const [allUsers, setAllUsers] = useState([
-    {
-      id: '1',
-      name: '코딩 마스터',
-      userId: 'code_master',
-      isFollowing: false,
-    },
-    {
-      id: '2',
-      name: '디자인 천재',
-      userId: 'design_genius',
-      isFollowing: true,
-    },
-    {
-      id: '3',
-      name: '독서광',
-      userId: 'book_lover',
-      isFollowing: false,
-    },
-    {
-      id: '4',
-      name: '여행하는 삶',
-      userId: 'travel_life',
-      isFollowing: false,
-    },
-    {
-      id: '5',
-      name: '사진작가 J',
-      userId: 'photo_J',
-      isFollowing: false,
-    },
-    {
-      id: '6',
-      name: '음악 애호가',
-      userId: 'music_lover',
-      isFollowing: false,
-    },
-    {
-      id: '7',
-      name: '요리 전문가',
-      userId: 'chef_master',
-      isFollowing: false,
-    },
-  ])
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
+
+  // 추천 유저 목록 조회
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchRecommendedUsers = async () => {
+      if (!currentUser) return
+
+      if (isMounted) {
+        setIsLoadingRecommendedUsers(true)
+        setRecommendedUsersError('')
+      }
+      try {
+        const response = await getRecommendedUsers(currentUser.USER_ID)
+        if (!isMounted) return
+
+        if (response.result && response.users) {
+          if (isMounted) {
+            // API 응답을 RecommendedUsers 컴포넌트 형식으로 변환
+            const formattedUsers = response.users.map((user, index) => ({
+              id: `recommended-${user.userId}-${index}`,
+              name: user.name,
+              userId: user.userId,
+              isFollowing: false, // 추천 유저는 기본적으로 팔로우하지 않은 상태
+            }))
+            setRecommendedUsers(formattedUsers)
+          }
+        } else {
+          if (isMounted) {
+            setRecommendedUsersError('추천 사용자를 불러올 수 없습니다.')
+          }
+        }
+      } catch (error) {
+        if (!isMounted) return
+
+        const apiError = handleApiError(error)
+        if (isMounted) {
+          setRecommendedUsersError(
+            apiError.message || '추천 사용자를 불러오는 중 오류가 발생했습니다.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingRecommendedUsers(false)
+        }
+      }
+    }
+
+    if (currentUser) {
+      fetchRecommendedUsers()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser])
 
   // 검색어에 따라 사용자 필터링 (사용자 ID로만 검색)
+  // TODO: 실제 검색 API 연동 필요
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
-
-    const query = searchQuery.trim().toLowerCase()
-
-    return allUsers.filter(user => user.userId.toLowerCase().includes(query))
-  }, [searchQuery, allUsers])
-
-  // 추천 사용자 (검색어가 없을 때만 표시)
-  const recommendedUsers = useMemo(() => {
-    if (searchQuery.trim()) return []
-    return allUsers.slice(0, 5) // 처음 5명만 추천
-  }, [searchQuery, allUsers])
+    // 현재는 빈 배열 반환 (검색 API 연동 필요)
+    return []
+  }, [searchQuery])
 
   const handleFollowToggle = (userId: string) => {
-    setAllUsers(prevUsers =>
+    setRecommendedUsers(prevUsers =>
       prevUsers.map(user =>
         user.userId === userId
           ? { ...user, isFollowing: !user.isFollowing }
@@ -92,10 +124,42 @@ function Search() {
             onFollowToggle={handleFollowToggle}
           />
         ) : (
-          <RecommendedUsers
-            users={recommendedUsers}
-            onFollowToggle={handleFollowToggle}
-          />
+          <>
+            {isLoadingRecommendedUsers ? (
+              <div className="py-12 text-center">
+                <p
+                  className="text-sm lg:text-base"
+                  style={{
+                    color: '#9CA3AF',
+                  }}
+                >
+                  추천 사용자를 불러오는 중...
+                </p>
+              </div>
+            ) : recommendedUsersError ? (
+              <div className="py-12 text-center">
+                <p className="text-sm text-red-600 lg:text-base">
+                  {recommendedUsersError}
+                </p>
+              </div>
+            ) : recommendedUsers.length === 0 && currentUser ? (
+              <div className="py-12 text-center">
+                <p
+                  className="text-sm lg:text-base"
+                  style={{
+                    color: '#9CA3AF',
+                  }}
+                >
+                  추천 사용자가 없습니다.
+                </p>
+              </div>
+            ) : (
+              <RecommendedUsers
+                users={recommendedUsers}
+                onFollowToggle={handleFollowToggle}
+              />
+            )}
+          </>
         )}
       </div>
       <BottomNavigation />
