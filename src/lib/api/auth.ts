@@ -11,6 +11,8 @@ import {
   type UpdateUserProfileRequest,
   type UpdateUserProfileResponse,
   type GetRecommendedUsersResponse,
+  type SearchUserRequest,
+  type SearchUserResponse,
 } from './types'
 
 /**
@@ -86,6 +88,20 @@ export async function getRecommendedUsers(
 ): Promise<GetRecommendedUsersResponse> {
   const response = await apiClient.get<GetRecommendedUsersResponse>(
     `/user/recommended/${userId}`
+  )
+  return response.data
+}
+
+/**
+ * 사용자 ID 키워드 검색 API
+ * POST /api/user/searchuser
+ */
+export async function searchUser(
+  data: SearchUserRequest
+): Promise<SearchUserResponse> {
+  const response = await apiClient.post<SearchUserResponse>(
+    '/user/searchuser',
+    data
   )
   return response.data
 }
