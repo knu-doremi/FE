@@ -80,6 +80,60 @@ export interface SearchPasswordResponse {
   message?: string
 }
 
+// ===== 유저 관련 타입 =====
+
+// 프로필 수정 요청
+export interface UpdateUserProfileRequest {
+  userid: string // 사용자 ID
+  password: string // 새 비밀번호
+  name: string // 새 이름
+}
+
+// 프로필 수정 응답
+export interface UpdateUserProfileResponse {
+  result: boolean
+  message?: string
+}
+
+// 추천 유저 정보
+export interface RecommendedUser {
+  userId: string
+  name: string
+  score: number
+}
+
+// 추천 유저 조회 응답
+export interface GetRecommendedUsersResponse {
+  result: boolean
+  users: RecommendedUser[]
+  count?: number // 추천 유저 수 (최대 5명)
+  message?: string
+}
+
+// ===== 사용자 검색 관련 타입 =====
+
+// 사용자 검색 요청
+export interface SearchUserRequest {
+  userId: string // 검색할 사용자 ID 키워드
+}
+
+// 검색된 유저 정보 (검색 API 응답)
+export interface SearchedUser {
+  userId: string
+  password: string
+  name: string
+  sex: string // 'M' | 'F'
+  birth: string // YYYYMMDD 형식
+  extra: string | null
+}
+
+// 사용자 검색 응답
+export interface SearchUserResponse {
+  result: boolean
+  users: SearchedUser[]
+  message?: string
+}
+
 // ===== 댓글 관련 타입 =====
 
 // 댓글 객체

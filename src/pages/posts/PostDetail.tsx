@@ -70,6 +70,25 @@ function PostDetail() {
   useEffect(() => {
     let isMounted = true
 
+    // 게시물 해시태그 목록 조회
+    const fetchPostHashtags = async (postId: number) => {
+      if (!isMounted) return
+      try {
+        const response = await getPostHashtags(postId)
+        if (!isMounted) return
+        if (response.result && response.hashtags) {
+          if (isMounted) {
+            setPostHashtags(response.hashtags)
+          }
+        }
+      } catch (error) {
+        // 해시태그 조회 실패는 무시 (게시물은 이미 표시됨)
+        if (!isMounted) return
+        const apiError = handleApiError(error)
+        console.warn('해시태그 조회 실패:', apiError.message)
+      }
+    }
+
     const fetchPost = async () => {
       if (!postId) return
 
@@ -82,26 +101,32 @@ function PostDetail() {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (response.result && response.post) {
-          setPost(response.post)
-          setLikeCount(response.post.likeCount || 0)
+          if (isMounted) {
+            setPost(response.post)
+            setLikeCount(response.post.likeCount || 0)
 
-          // 게시물 응답에 해시태그가 없거나 비어있으면 별도 API로 조회
-          if (!response.post.hashtags || response.post.hashtags.length === 0) {
-            fetchPostHashtags(parseInt(postId))
-          } else {
-            // 게시물 응답에 해시태그가 있으면 그대로 사용
-            setPostHashtags(response.post.hashtags)
+            // 게시물 응답에 해시태그가 없거나 비어있으면 별도 API로 조회
+            if (!response.post.hashtags || response.post.hashtags.length === 0) {
+              fetchPostHashtags(parseInt(postId))
+            } else {
+              // 게시물 응답에 해시태그가 있으면 그대로 사용
+              setPostHashtags(response.post.hashtags)
+            }
           }
         } else {
-          setPostError('게시물을 불러올 수 없습니다.')
+          if (isMounted) {
+            setPostError('게시물을 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setPostError(
-          apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setPostError(
+            apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingPost(false)
@@ -115,20 +140,6 @@ function PostDetail() {
       isMounted = false
     }
   }, [postId])
-
-  // 게시물 해시태그 목록 조회
-  const fetchPostHashtags = async (postId: number) => {
-    try {
-      const response = await getPostHashtags(postId)
-      if (response.result && response.hashtags) {
-        setPostHashtags(response.hashtags)
-      }
-    } catch (error) {
-      // 해시태그 조회 실패는 무시 (게시물은 이미 표시됨)
-      const apiError = handleApiError(error)
-      console.warn('해시태그 조회 실패:', apiError.message)
-    }
-  }
 
   // 북마크 상태 확인
   useEffect(() => {
@@ -462,6 +473,13 @@ function PostDetail() {
     }
   }
 
+  // 작성자 프로필로 이동
+  const handleAuthorClick = () => {
+    if (post?.userId) {
+      navigate(`/users/${post.userId}`)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -544,7 +562,10 @@ function PostDetail() {
               {/* 게시물 정보 */}
               <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm lg:p-6">
                 {/* 작성자 */}
-                <div className="flex items-center gap-3">
+                <div
+                  className="flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-50 rounded-lg p-2 -m-2"
+                  onClick={handleAuthorClick}
+                >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-full"
                     style={{

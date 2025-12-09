@@ -10,6 +10,7 @@ import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
 import { getTotalLikes } from '@/lib/api/likes'
 import { checkFollowState, toggleFollow, getFollowCount } from '@/lib/api/follow'
+import { searchUser } from '@/lib/api/auth'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -34,6 +35,7 @@ function Profile() {
   const [followers, setFollowers] = useState<number>(0)
   const [following, setFollowing] = useState<number>(0)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [otherUserName, setOtherUserName] = useState<string | undefined>(undefined) // 다른 사용자 이름 상태
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -64,17 +66,27 @@ function Profile() {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (response.result && response.posts) {
-          setPosts(response.posts)
+          if (isMounted) {
+            setPosts(response.posts)
+            // 다른 사용자 프로필일 경우 첫 번째 게시물에서 username 추출
+            if (urlUserId && response.posts.length > 0 && response.posts[0].username) {
+              setOtherUserName(response.posts[0].username)
+            }
+          }
         } else {
-          setPostsError('게시물을 불러올 수 없습니다.')
+          if (isMounted) {
+            setPostsError('게시물을 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setPostsError(
-          apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setPostsError(
+            apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingPosts(false)
@@ -266,9 +278,49 @@ function Profile() {
     }
   }, [urlUserId, currentUser, location.pathname])
 
+  // 다른 사용자 이름 조회 (게시물에서 가져오지 못한 경우 검색 API 사용)
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchUserName = async () => {
+      // 자신의 프로필이거나 이미 이름이 있으면 조회하지 않음
+      if (!urlUserId || otherUserName || !currentUser) return
+
+      // 게시물이 없거나 username이 없는 경우에만 검색 API 사용
+      if (posts.length === 0 || !posts[0].username) {
+        try {
+          const response = await searchUser({ userId: urlUserId })
+          if (!isMounted) return
+
+          if (response.result && response.users && response.users.length > 0) {
+            // 정확히 일치하는 사용자 찾기
+            const exactMatch = response.users.find(
+              user => user.userId === urlUserId
+            )
+            if (exactMatch && exactMatch.name) {
+              if (isMounted) {
+                setOtherUserName(exactMatch.name)
+              }
+            }
+          }
+        } catch (error) {
+          // 검색 실패 시 무시 (기본값 사용)
+        }
+      }
+    }
+
+    fetchUserName()
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, otherUserName, posts, currentUser])
+
   // 사용자 데이터
   const userData = {
-    name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
+    name: urlUserId
+      ? otherUserName || `사용자_${urlUserId}`
+      : currentUser?.NAME || '사용자',
     userId: urlUserId || currentUser?.USER_ID || 'user_officials',
     gender: 'female' as const,
     birthDate: '2000-01-01',
