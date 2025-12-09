@@ -10,6 +10,7 @@ import { getPostsByUser } from '@/lib/api/posts'
 import { getBookmarks } from '@/lib/api/bookmarks'
 import { getTotalLikes } from '@/lib/api/likes'
 import { checkFollowState, toggleFollow, getFollowCount } from '@/lib/api/follow'
+import { searchUser } from '@/lib/api/auth'
 import { handleApiError } from '@/lib/api/types'
 import { getStorageItem } from '@/lib/utils/storage'
 import { getImageUrl } from '@/lib/utils/format'
@@ -276,6 +277,44 @@ function Profile() {
       isMounted = false
     }
   }, [urlUserId, currentUser, location.pathname])
+
+  // 다른 사용자 이름 조회 (게시물에서 가져오지 못한 경우 검색 API 사용)
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchUserName = async () => {
+      // 자신의 프로필이거나 이미 이름이 있으면 조회하지 않음
+      if (!urlUserId || otherUserName || !currentUser) return
+
+      // 게시물이 없거나 username이 없는 경우에만 검색 API 사용
+      if (posts.length === 0 || !posts[0].username) {
+        try {
+          const response = await searchUser({ userId: urlUserId })
+          if (!isMounted) return
+
+          if (response.result && response.users && response.users.length > 0) {
+            // 정확히 일치하는 사용자 찾기
+            const exactMatch = response.users.find(
+              user => user.userId === urlUserId
+            )
+            if (exactMatch && exactMatch.name) {
+              if (isMounted) {
+                setOtherUserName(exactMatch.name)
+              }
+            }
+          }
+        } catch (error) {
+          // 검색 실패 시 무시 (기본값 사용)
+        }
+      }
+    }
+
+    fetchUserName()
+
+    return () => {
+      isMounted = false
+    }
+  }, [urlUserId, otherUserName, posts, currentUser])
 
   // 사용자 데이터
   const userData = {
