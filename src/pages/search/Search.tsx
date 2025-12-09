@@ -166,7 +166,7 @@ function Search() {
                   })
                   return {
                     id: `search-${user.userId}-${index}`,
-                    name: user.name,
+                    name: user.name || user.userId, // name이 없으면 userId 사용
                     userId: user.userId,
                     isFollowing: followStateResponse.result
                       ? followStateResponse.following
@@ -176,7 +176,7 @@ function Search() {
                   // 팔로우 상태 확인 실패 시 기본값(false) 사용
                   return {
                     id: `search-${user.userId}-${index}`,
-                    name: user.name,
+                    name: user.name || user.userId, // name이 없으면 userId 사용
                     userId: user.userId,
                     isFollowing: false,
                   }
@@ -192,7 +192,7 @@ function Search() {
             // currentUser가 없으면 팔로우 상태 확인 없이 표시
             const formattedUsers = response.users.map((user, index) => ({
               id: `search-${user.userId}-${index}`,
-              name: user.name,
+              name: user.name || user.userId, // name이 없으면 userId 사용
               userId: user.userId,
               isFollowing: false,
             }))
