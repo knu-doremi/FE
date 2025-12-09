@@ -34,6 +34,7 @@ function Profile() {
   const [followers, setFollowers] = useState<number>(0)
   const [following, setFollowing] = useState<number>(0)
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
+  const [otherUserName, setOtherUserName] = useState<string | undefined>(undefined) // 다른 사용자 이름 상태
 
   // 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -65,6 +66,12 @@ function Profile() {
 
         if (response.result && response.posts) {
           setPosts(response.posts)
+          // 다른 사용자 프로필일 경우 첫 번째 게시물에서 username 추출
+          if (urlUserId && response.posts.length > 0 && response.posts[0].username) {
+            if (isMounted) {
+              setOtherUserName(response.posts[0].username)
+            }
+          }
         } else {
           setPostsError('게시물을 불러올 수 없습니다.')
         }
@@ -268,7 +275,9 @@ function Profile() {
 
   // 사용자 데이터
   const userData = {
-    name: urlUserId ? `사용자_${urlUserId}` : currentUser?.NAME || '사용자',
+    name: urlUserId
+      ? otherUserName || `사용자_${urlUserId}`
+      : currentUser?.NAME || '사용자',
     userId: urlUserId || currentUser?.USER_ID || 'user_officials',
     gender: 'female' as const,
     birthDate: '2000-01-01',
