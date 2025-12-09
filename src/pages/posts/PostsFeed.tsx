@@ -99,17 +99,23 @@ function PostsFeed() {
               }
             }
           )
-          setRecommendedPosts(transformedPosts)
+          if (isMounted) {
+            setRecommendedPosts(transformedPosts)
+          }
         } else {
-          setRecommendedError('추천 게시물을 불러올 수 없습니다.')
+          if (isMounted) {
+            setRecommendedError('추천 게시물을 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setRecommendedError(
-          apiError.message || '추천 게시물을 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setRecommendedError(
+            apiError.message || '추천 게시물을 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingRecommended(false)
@@ -166,17 +172,23 @@ function PostsFeed() {
               }
             }
           )
-          setFollowingPosts(transformedPosts)
+          if (isMounted) {
+            setFollowingPosts(transformedPosts)
+          }
         } else {
-          setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
+          if (isMounted) {
+            setFollowingError('팔로잉 게시물을 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setFollowingError(
-          apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setFollowingError(
+            apiError.message || '팔로잉 게시물을 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingFollowing(false)
@@ -221,8 +233,10 @@ function PostsFeed() {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (!autocompleteResponse.result || !autocompleteResponse.hashtags) {
-          setHashtagSearchResults([])
-          setIsLoadingHashtagSearch(false)
+          if (isMounted) {
+            setHashtagSearchResults([])
+            setIsLoadingHashtagSearch(false)
+          }
           return
         }
 
@@ -231,8 +245,10 @@ function PostsFeed() {
         )
 
         if (matchingHashtags.length === 0) {
-          setHashtagSearchResults([])
-          setIsLoadingHashtagSearch(false)
+          if (isMounted) {
+            setHashtagSearchResults([])
+            setIsLoadingHashtagSearch(false)
+          }
           return
         }
 
@@ -323,15 +339,19 @@ function PostsFeed() {
           }
         )
 
-        setHashtagSearchResults(transformedPosts)
+        if (isMounted) {
+          setHashtagSearchResults(transformedPosts)
+        }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setHashtagSearchError(
-          apiError.message || '해시태그 검색 중 오류가 발생했습니다.'
-        )
-        setHashtagSearchResults([])
+        if (isMounted) {
+          setHashtagSearchError(
+            apiError.message || '해시태그 검색 중 오류가 발생했습니다.'
+          )
+          setHashtagSearchResults([])
+        }
       } finally {
         if (isMounted) {
           setIsLoadingHashtagSearch(false)

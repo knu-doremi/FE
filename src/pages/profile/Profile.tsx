@@ -65,23 +65,27 @@ function Profile() {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         if (response.result && response.posts) {
-          setPosts(response.posts)
-          // 다른 사용자 프로필일 경우 첫 번째 게시물에서 username 추출
-          if (urlUserId && response.posts.length > 0 && response.posts[0].username) {
-            if (isMounted) {
+          if (isMounted) {
+            setPosts(response.posts)
+            // 다른 사용자 프로필일 경우 첫 번째 게시물에서 username 추출
+            if (urlUserId && response.posts.length > 0 && response.posts[0].username) {
               setOtherUserName(response.posts[0].username)
             }
           }
         } else {
-          setPostsError('게시물을 불러올 수 없습니다.')
+          if (isMounted) {
+            setPostsError('게시물을 불러올 수 없습니다.')
+          }
         }
       } catch (error) {
         if (!isMounted) return // 컴포넌트가 언마운트되었으면 상태 업데이트 중단
 
         const apiError = handleApiError(error)
-        setPostsError(
-          apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
-        )
+        if (isMounted) {
+          setPostsError(
+            apiError.message || '게시물을 불러오는 중 오류가 발생했습니다.'
+          )
+        }
       } finally {
         if (isMounted) {
           setIsLoadingPosts(false)
