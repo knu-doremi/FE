@@ -473,6 +473,13 @@ function PostDetail() {
     }
   }
 
+  // 작성자 프로필로 이동
+  const handleAuthorClick = () => {
+    if (post?.userId) {
+      navigate(`/users/${post.userId}`)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -555,7 +562,10 @@ function PostDetail() {
               {/* 게시물 정보 */}
               <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm lg:p-6">
                 {/* 작성자 */}
-                <div className="flex items-center gap-3">
+                <div
+                  className="flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-50 rounded-lg p-2 -m-2"
+                  onClick={handleAuthorClick}
+                >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-full"
                     style={{

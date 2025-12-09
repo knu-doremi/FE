@@ -166,6 +166,11 @@ function PostCard({ post }: PostCardProps) {
     navigate(`/posts/${post.id}`)
   }
 
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/users/${post.author.userId}`)
+  }
+
   // 내용이 길면 일부만 표시
   const truncatedContent =
     post.content.length > 100
@@ -175,7 +180,10 @@ function PostCard({ post }: PostCardProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
       {/* 작성자 정보 */}
-      <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 lg:px-6 lg:py-4">
+      <div
+        className="flex cursor-pointer items-center gap-3 border-b border-gray-100 px-4 py-3 transition-colors hover:bg-gray-50 lg:px-6 lg:py-4"
+        onClick={handleAuthorClick}
+      >
         <div
           className="flex h-10 w-10 items-center justify-center rounded-full lg:h-12 lg:w-12"
           style={{
