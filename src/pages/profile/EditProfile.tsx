@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import FormErrorMessage from '../auth/components/FormErrorMessage'
+import { updateUserProfile } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/types'
+import { getStorageItem, setStorageItem } from '@/lib/utils/storage'
+import type { LoginUser } from '@/lib/api/types'
 import logoImage from '@/assets/images/doremi-logo.png'
 
 interface EditProfileErrors {
@@ -35,22 +39,75 @@ function validateEditProfileForm(data: {
 
 function EditProfile() {
   const navigate = useNavigate()
-  // TODO: 실제 사용자 데이터로 교체
   const [formData, setFormData] = useState({
-    name: '사용자',
+    name: '',
     password: '',
   })
   const [errors, setErrors] = useState<EditProfileErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const userStr = getStorageItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr) as LoginUser
+        setCurrentUser(user)
+        setFormData(prev => ({
+          ...prev,
+          name: user.NAME || '',
+        }))
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validateEditProfileForm(formData)
     setErrors(validationErrors)
+    setSubmitError('')
 
-    if (Object.keys(validationErrors).length === 0) {
-      // TODO: API 연동
-      navigate('/profile')
+    if (Object.keys(validationErrors).length > 0) {
+      return
+    }
+
+    if (!currentUser) {
+      setSubmitError('로그인이 필요합니다.')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const response = await updateUserProfile({
+        userid: currentUser.USER_ID,
+        password: formData.password,
+        name: formData.name,
+      })
+
+      if (response.result) {
+        // localStorage의 사용자 정보 업데이트
+        const updatedUser: LoginUser = {
+          ...currentUser,
+          NAME: formData.name,
+          PASSWORD: formData.password, // 주의: 실제로는 해시된 비밀번호가 저장될 수 있음
+        }
+        setStorageItem('user', JSON.stringify(updatedUser))
+
+        // 프로필 화면으로 리다이렉트
+        navigate('/profile')
+      } else {
+        setSubmitError(response.message || '프로필 수정에 실패했습니다.')
+      }
+    } catch (error) {
+      const apiError = handleApiError(error)
+      setSubmitError(apiError.message || '프로필 수정 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -161,6 +218,12 @@ function EditProfile() {
               <FormErrorMessage message={errors.password} />
             </div>
 
+            {submitError && (
+              <div className="rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-600">{submitError}</p>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button
                 type="button"
@@ -183,18 +246,23 @@ function EditProfile() {
               </Button>
               <Button
                 type="submit"
-                className="flex-1 text-white"
+                className="flex-1 cursor-pointer text-white disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
                   backgroundColor: '#B9BDDE',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.backgroundColor = '#A5A9D0'
+                  if (!isSubmitting) {
+                    e.currentTarget.style.backgroundColor = '#A5A9D0'
+                  }
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.backgroundColor = '#B9BDDE'
+                  if (!isSubmitting) {
+                    e.currentTarget.style.backgroundColor = '#B9BDDE'
+                  }
                 }}
+                disabled={isSubmitting}
               >
-                저장
+                {isSubmitting ? '저장 중...' : '저장'}
               </Button>
             </div>
           </form>
