@@ -81,6 +81,7 @@ function EditProfile() {
       return
     }
 
+    let isMounted = true
     setIsSubmitting(true)
     try {
       const response = await updateUserProfile({
@@ -88,6 +89,8 @@ function EditProfile() {
         password: formData.password,
         name: formData.name,
       })
+
+      if (!isMounted) return
 
       if (response.result) {
         // localStorage의 사용자 정보 업데이트
@@ -101,13 +104,23 @@ function EditProfile() {
         // 프로필 화면으로 리다이렉트
         navigate('/profile')
       } else {
-        setSubmitError(response.message || '프로필 수정에 실패했습니다.')
+        if (isMounted) {
+          setSubmitError(response.message || '프로필 수정에 실패했습니다.')
+        }
       }
     } catch (error) {
+      if (!isMounted) return
+
       const apiError = handleApiError(error)
-      setSubmitError(apiError.message || '프로필 수정 중 오류가 발생했습니다.')
+      if (isMounted) {
+        setSubmitError(
+          apiError.message || '프로필 수정 중 오류가 발생했습니다.'
+        )
+      }
     } finally {
-      setIsSubmitting(false)
+      if (isMounted) {
+        setIsSubmitting(false)
+      }
     }
   }
 
