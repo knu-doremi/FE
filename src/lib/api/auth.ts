@@ -8,6 +8,9 @@ import {
   type CheckIdResponse,
   type SearchPasswordRequest,
   type SearchPasswordResponse,
+  type UpdateUserProfileRequest,
+  type UpdateUserProfileResponse,
+  type GetRecommendedUsersResponse,
 } from './types'
 
 /**
@@ -56,6 +59,33 @@ export async function searchPassword(
   const response = await apiClient.post<SearchPasswordResponse>(
     '/user/searchpassword',
     data
+  )
+  return response.data
+}
+
+/**
+ * 프로필 수정 API
+ * POST /api/user/update
+ */
+export async function updateUserProfile(
+  data: UpdateUserProfileRequest
+): Promise<UpdateUserProfileResponse> {
+  const response = await apiClient.post<UpdateUserProfileResponse>(
+    '/user/update',
+    data
+  )
+  return response.data
+}
+
+/**
+ * 추천 유저 조회 API
+ * GET /api/user/recommended/:user_id
+ */
+export async function getRecommendedUsers(
+  userId: string
+): Promise<GetRecommendedUsersResponse> {
+  const response = await apiClient.get<GetRecommendedUsersResponse>(
+    `/user/recommended/${userId}`
   )
   return response.data
 }
