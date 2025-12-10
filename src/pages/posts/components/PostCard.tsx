@@ -28,7 +28,6 @@ function PostCard({ post }: PostCardProps) {
   const navigate = useNavigate()
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false)
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
-  const [bookmarkError, setBookmarkError] = useState<string>('')
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
   const [likeCount, setLikeCount] = useState(post.likes)
   const [isTogglingLike, setIsTogglingLike] = useState(false)
@@ -131,7 +130,6 @@ function PostCard({ post }: PostCardProps) {
 
     let isMounted = true
     setIsTogglingBookmark(true)
-    setBookmarkError('')
     try {
       if (isBookmarked) {
         // 북마크 삭제
@@ -146,7 +144,6 @@ function PostCard({ post }: PostCardProps) {
             // 북마크 삭제 실패 시 에러 메시지 표시
             const errorMessage =
               response.message || '북마크 삭제에 실패했습니다.'
-            setBookmarkError(errorMessage)
             alert(errorMessage)
           }
         }
@@ -163,7 +160,6 @@ function PostCard({ post }: PostCardProps) {
             // 북마크 추가 실패 시 에러 메시지 표시 (예: 삭제된 게시물)
             const errorMessage =
               response.message || '북마크 추가에 실패했습니다.'
-            setBookmarkError(errorMessage)
             alert(errorMessage)
           }
         }
@@ -173,7 +169,6 @@ function PostCard({ post }: PostCardProps) {
       const apiError = handleApiError(error)
       const errorMessage =
         apiError.message || '북마크 처리 중 오류가 발생했습니다.'
-      setBookmarkError(errorMessage)
       alert(errorMessage)
       console.error('북마크 토글 실패:', apiError.message)
     } finally {

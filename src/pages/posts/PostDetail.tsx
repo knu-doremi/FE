@@ -49,7 +49,6 @@ function PostDetail() {
   const [postHashtags, setPostHashtags] = useState<PostHashtag[]>([])
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
-  const [bookmarkError, setBookmarkError] = useState<string>('')
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [isTogglingLike, setIsTogglingLike] = useState(false)
@@ -418,7 +417,6 @@ function PostDetail() {
 
     let isMounted = true
     setIsTogglingBookmark(true)
-    setBookmarkError('')
     try {
       if (isBookmarked) {
         // 북마크 삭제
@@ -433,7 +431,6 @@ function PostDetail() {
             // 북마크 삭제 실패 시 에러 메시지 표시
             const errorMessage =
               response.message || '북마크 삭제에 실패했습니다.'
-            setBookmarkError(errorMessage)
             alert(errorMessage)
           }
         }
@@ -450,7 +447,6 @@ function PostDetail() {
             // 북마크 추가 실패 시 에러 메시지 표시 (예: 삭제된 게시물)
             const errorMessage =
               response.message || '북마크 추가에 실패했습니다.'
-            setBookmarkError(errorMessage)
             alert(errorMessage)
           }
         }
@@ -460,7 +456,6 @@ function PostDetail() {
       const apiError = handleApiError(error)
       const errorMessage =
         apiError.message || '북마크 처리 중 오류가 발생했습니다.'
-      setBookmarkError(errorMessage)
       alert(errorMessage)
       console.error('북마크 토글 실패:', apiError.message)
     } finally {
