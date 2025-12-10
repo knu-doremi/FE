@@ -396,13 +396,24 @@ function PostDetail() {
     setIsTogglingLike(true)
     try {
       const response = await toggleLike(parseInt(postId), currentUser.USER_ID)
-      if (isMounted && response.result) {
-        setIsLiked(response.isLiked)
-        // 좋아요 수 업데이트
-        setLikeCount(prev => (response.isLiked ? prev + 1 : Math.max(0, prev - 1)))
+      if (isMounted) {
+        if (response.result) {
+          setIsLiked(response.isLiked)
+          // 좋아요 수 업데이트
+          setLikeCount(prev => (response.isLiked ? prev + 1 : Math.max(0, prev - 1)))
+        } else {
+          // 좋아요 토글 실패 시 에러 메시지 표시
+          const errorMessage =
+            response.message || '좋아요 처리에 실패했습니다.'
+          alert(errorMessage)
+        }
       }
     } catch (error) {
+      if (!isMounted) return
       const apiError = handleApiError(error)
+      const errorMessage =
+        apiError.message || '좋아요 처리 중 오류가 발생했습니다.'
+      alert(errorMessage)
       console.error('좋아요 토글 실패:', apiError.message)
     } finally {
       if (isMounted) {
