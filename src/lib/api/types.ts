@@ -325,7 +325,7 @@ export interface ToggleBookmarkRequest {
 
 // 북마크 추가/삭제 응답
 export interface ToggleBookmarkResponse {
-  result: boolean
+  result: boolean | { success: boolean; message?: string }
   message?: string
 }
 

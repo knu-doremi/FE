@@ -37,17 +37,46 @@ export async function getBookmarks(
 }
 
 /**
+ * 북마크 응답 정규화 (result가 객체인 경우 boolean으로 변환)
+ */
+function normalizeBookmarkResponse(
+  response: ToggleBookmarkResponse
+): { result: boolean; message?: string } {
+  if (typeof response.result === 'boolean') {
+    return {
+      result: response.result,
+      message: response.message,
+    }
+  } else if (
+    response.result &&
+    typeof response.result === 'object' &&
+    'success' in response.result
+  ) {
+    // 백엔드 응답 형식: { result: { success: boolean, message?: string }, message?: string }
+    return {
+      result: response.result.success,
+      message: response.result.message || response.message,
+    }
+  }
+  // 기본값
+  return {
+    result: false,
+    message: response.message,
+  }
+}
+
+/**
  * 북마크 추가
  * POST /api/bookmarks/add
  */
 export async function addBookmark(
   data: ToggleBookmarkRequest
-): Promise<ToggleBookmarkResponse> {
+): Promise<{ result: boolean; message?: string }> {
   const response = await apiClient.post<ToggleBookmarkResponse>(
     '/bookmarks/add',
     data
   )
-  return response.data
+  return normalizeBookmarkResponse(response.data)
 }
 
 /**
@@ -56,11 +85,11 @@ export async function addBookmark(
  */
 export async function deleteBookmark(
   data: ToggleBookmarkRequest
-): Promise<ToggleBookmarkResponse> {
+): Promise<{ result: boolean; message?: string }> {
   const response = await apiClient.post<ToggleBookmarkResponse>(
     '/bookmarks/delete',
     data
   )
-  return response.data
+  return normalizeBookmarkResponse(response.data)
 }
 
