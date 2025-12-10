@@ -38,30 +38,37 @@ export async function getBookmarks(
 
 /**
  * 북마크 응답 정규화 (result가 객체인 경우 boolean으로 변환)
+ * 백엔드 응답 형식:
+ * - 성공: { result: { success: true, message: "..." }, message: "..." }
+ * - 실패: { result: { success: false, message: "..." }, message: "..." }
+ * - 에러: { result: false, message: "..." }
  */
 function normalizeBookmarkResponse(
   response: ToggleBookmarkResponse
 ): { result: boolean; message?: string } {
+  // result가 boolean인 경우 (에러 응답)
   if (typeof response.result === 'boolean') {
     return {
       result: response.result,
       message: response.message,
     }
-  } else if (
-    response.result &&
-    typeof response.result === 'object' &&
-    'success' in response.result
-  ) {
-    // 백엔드 응답 형식: { result: { success: boolean, message?: string }, message?: string }
-    return {
-      result: response.result.success,
-      message: response.result.message || response.message,
+  }
+  
+  // result가 객체인 경우 (성공/실패 응답)
+  if (response.result && typeof response.result === 'object') {
+    const resultObj = response.result as { success?: boolean; message?: string }
+    if ('success' in resultObj && typeof resultObj.success === 'boolean') {
+      return {
+        result: resultObj.success,
+        message: resultObj.message || response.message,
+      }
     }
   }
-  // 기본값
+  
+  // 기본값 (예상치 못한 형식)
   return {
     result: false,
-    message: response.message,
+    message: response.message || '북마크 처리 중 오류가 발생했습니다.',
   }
 }
 
