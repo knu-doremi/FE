@@ -1,4 +1,8 @@
-# doremi-FE
+# [Team 3] DoReMi SNS - Frontend
+
+> **사용자 취향 분석 기반 추천 시스템을 탑재한 SNS**
+>
+> 이미지 분석 AI와 콘텐츠 기반 필터링(Content-based Filtering)을 활용하여 사용자에게 최적화된 유저 및 게시물을 추천합니다.
 
 모바일 우선 SNS 프론트엔드 (Vite + React + TypeScript + Tailwind, pnpm)
 
