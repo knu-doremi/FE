@@ -155,7 +155,9 @@ function PostCard({ post }: PostCardProps) {
             // 북마크 삭제 실패 시 에러 메시지 표시
             const errorMessage =
               response.message || '북마크 삭제에 실패했습니다.'
-            alert(errorMessage)
+            if (errorMessage) {
+              alert(errorMessage)
+            }
           }
         }
       } else {
@@ -169,9 +171,12 @@ function PostCard({ post }: PostCardProps) {
             setIsBookmarked(true)
           } else {
             // 북마크 추가 실패 시 에러 메시지 표시 (예: 삭제된 게시물)
+            // response.message가 있으면 그것을 사용하고, 없으면 기본 메시지 사용
             const errorMessage =
               response.message || '북마크 추가에 실패했습니다.'
-            alert(errorMessage)
+            if (errorMessage) {
+              alert(errorMessage)
+            }
           }
         }
       }

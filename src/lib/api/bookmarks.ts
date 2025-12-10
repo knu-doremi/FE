@@ -58,9 +58,13 @@ function normalizeBookmarkResponse(
   if (response.result && typeof response.result === 'object') {
     const resultObj = response.result as { success?: boolean; message?: string }
     if ('success' in resultObj && typeof resultObj.success === 'boolean') {
+      // success가 false인 경우, result 객체의 message를 우선 사용
+      // (예: "존재하지 않거나 삭제된 게시물입니다.")
+      // result.message가 있으면 그것을 사용하고, 없으면 최상위 message 사용
+      const errorMessage = resultObj.message || response.message
       return {
         result: resultObj.success,
-        message: resultObj.message || response.message,
+        message: errorMessage,
       }
     }
   }
